@@ -9,7 +9,7 @@ from .views import (
     chatbot_predict,
     get_conversation_history,
 )
-from .auth import register, login, logout, get_current_user, update_profile, password_reset_request, password_reset_confirm
+from .auth import register, login, logout, get_current_user, update_profile, delete_profile_picture, password_reset_request, password_reset_confirm
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -24,6 +24,7 @@ urlpatterns = [
     path('auth/password-reset/', password_reset_request, name='password_reset_request'),
     path('auth/password-reset/confirm/', password_reset_confirm, name='password_reset_confirm'),
     path('profile/', update_profile, name='update_profile'),
+    path('profile/picture/', delete_profile_picture, name='delete_profile_picture'),
 
     # ────────────────────────────────────────────────
     # Prediction Endpoints (XGBoost Only)

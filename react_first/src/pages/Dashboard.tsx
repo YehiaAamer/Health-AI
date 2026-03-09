@@ -69,7 +69,9 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold mb-2">
               أهلا بعودتك{user ? ` يا ${user.first_name || user.email}` : ""}!
             </h1>
-            <p className="text-muted-foreground">صحتك، بقوة الذكاء الاصطناعي.</p>
+            <p className="text-muted-foreground">
+              صحتك، بقوة الذكاء الاصطناعي.
+            </p>
           </div>
           <Link to="/diagnosis">
             <Button size="lg" className="gap-2">
@@ -84,9 +86,22 @@ const Dashboard = () => {
           <div className="space-y-6">
             <Card className="p-6">
               <div className="flex flex-col items-center mb-6">
-                <div className="w-32 h-32 bg-gradient-to-br from-primary to-cyan-600 rounded-full mb-4 flex items-center justify-center relative">
-                  <div className="w-28 h-28 bg-accent rounded-full" />
-                  <div className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                <div className="w-32 h-32 rounded-full mb-4 relative">
+                  <div className="w-32 h-32 bg-gradient-to-br from-primary to-cyan-600 rounded-full flex items-center justify-center overflow-hidden">
+                    {user?.profile_picture ? (
+                      <img
+                        src={user.profile_picture}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <FaUser className="h-14 w-14 text-white" />
+                    )}
+                  </div>
+                  <Link
+                    to="/edit-profile"
+                    className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors"
+                  >
                     <svg
                       className="h-5 w-5 text-white"
                       fill="none"
@@ -100,9 +115,11 @@ const Dashboard = () => {
                         d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                       />
                     </svg>
-                  </div>
+                  </Link>
                 </div>
-                <h3 className="text-xl font-bold">{user ? `${user.first_name} ${user.last_name}` : "المستخدم"}</h3>
+                <h3 className="text-xl font-bold">
+                  {user ? `${user.first_name} ${user.last_name}` : "المستخدم"}
+                </h3>
                 <p className="text-sm text-muted-foreground">مستخدم HealthAI</p>
               </div>
 
@@ -158,7 +175,9 @@ const Dashboard = () => {
               <h3 className="text-xl font-bold mb-4">التحاليل الحديثة</h3>
               {isLoading ? (
                 <div className="text-center py-4">
-                  <p className="text-muted-foreground">جاري تحميل البيانات...</p>
+                  <p className="text-muted-foreground">
+                    جاري تحميل البيانات...
+                  </p>
                 </div>
               ) : error ? (
                 <div className="text-center py-4">
@@ -166,7 +185,9 @@ const Dashboard = () => {
                 </div>
               ) : predictions.length === 0 ? (
                 <div className="text-center py-4">
-                  <p className="text-muted-foreground mb-4">لا توجد تحاليل سابقة</p>
+                  <p className="text-muted-foreground mb-4">
+                    لا توجد تحاليل سابقة
+                  </p>
                   <Link to="/diagnosis">
                     <Button variant="default">عمل تحليل أول الحين</Button>
                   </Link>
@@ -174,7 +195,10 @@ const Dashboard = () => {
               ) : (
                 <div className="space-y-3">
                   {predictions.slice(0, 5).map((pred) => (
-                    <div key={pred.id} className="flex items-center justify-between p-4 bg-accent/50 rounded-lg">
+                    <div
+                      key={pred.id}
+                      className="flex items-center justify-between p-4 bg-accent/50 rounded-lg"
+                    >
                       <div>
                         <h4 className="font-semibold">
                           احتمالية الإصابة: {pred.probability.toFixed(2)}%
@@ -184,26 +208,32 @@ const Dashboard = () => {
                             {pred.risk_level}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(pred.created_at).toLocaleDateString("ar-SA")}
+                            {new Date(pred.created_at).toLocaleDateString(
+                              "ar-SA",
+                            )}
                           </span>
                         </div>
                       </div>
-                      <Link to="/report" state={{
-                        formData: {
-                          pregnancies: pred.pregnancies,
-                          glucose: pred.glucose,
-                          bloodPressure: pred.blood_pressure,
-                          skinThickness: pred.skin_thickness,
-                          insulin: pred.insulin,
-                          bmi: pred.bmi,
-                          diabetesPedigreeFunction: pred.diabetes_pedigree_function,
-                          age: pred.age,
-                        },
-                        probability: pred.probability,
-                        riskLevel: pred.risk_level,
-                        message: pred.message,
-                        predictionId: pred.id,
-                      }}>
+                      <Link
+                        to="/report"
+                        state={{
+                          formData: {
+                            pregnancies: pred.pregnancies,
+                            glucose: pred.glucose,
+                            bloodPressure: pred.blood_pressure,
+                            skinThickness: pred.skin_thickness,
+                            insulin: pred.insulin,
+                            bmi: pred.bmi,
+                            diabetesPedigreeFunction:
+                              pred.diabetes_pedigree_function,
+                            age: pred.age,
+                          },
+                          probability: pred.probability,
+                          riskLevel: pred.risk_level,
+                          message: pred.message,
+                          predictionId: pred.id,
+                        }}
+                      >
                         <Button variant="link">عرض التقرير</Button>
                       </Link>
                     </div>
@@ -214,11 +244,14 @@ const Dashboard = () => {
 
             {/* AI Recommendations */}
             <Card className="p-6 bg-primary/5 border-primary/20">
-              <h3 className="text-xl font-bold mb-4">نصائح صحية من الذكاء الاصطناعي</h3>
+              <h3 className="text-xl font-bold mb-4">
+                نصائح صحية من الذكاء الاصطناعي
+              </h3>
               <div className="bg-card p-4 rounded-lg">
                 <p className="text-primary font-semibold mb-2">نصيحة صحية:</p>
                 <p className="text-muted-foreground">
-                  حافظ على رطوبة جسدك، مارس الرياضة بانتظام، واحصل على قسط كافٍ من النوم لصحة أفضل.
+                  حافظ على رطوبة جسدك، مارس الرياضة بانتظام، واحصل على قسط كافٍ
+                  من النوم لصحة أفضل.
                 </p>
               </div>
             </Card>
@@ -236,7 +269,7 @@ const Dashboard = () => {
                   </Card>
                 </Link>
 
-                <Card 
+                <Card
                   className="p-6 text-center hover:bg-accent cursor-pointer transition-colors"
                   onClick={() => {
                     if (predictions.length === 0) {
@@ -249,7 +282,9 @@ const Dashboard = () => {
                   </div>
                   <h4 className="font-semibold">التقارير السابقة</h4>
                   {predictions.length > 0 && (
-                    <p className="text-xs text-muted-foreground mt-2">{predictions.length} تقرير</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {predictions.length} تقرير
+                    </p>
                   )}
                 </Card>
 
@@ -269,14 +304,16 @@ const Dashboard = () => {
               <h3 className="text-xl font-bold mb-4">متتبع التقدم</h3>
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium">
-                    الفحوصات المكتملة
-                  </span>
+                  <span className="text-sm font-medium">الفحوصات المكتملة</span>
                   <span className="text-sm font-semibold text-primary">
-                    {predictions.length} من {Math.max(predictions.length + 1, 4)}
+                    {predictions.length} من{" "}
+                    {Math.max(predictions.length + 1, 4)}
                   </span>
                 </div>
-                <Progress value={Math.min((predictions.length / 4) * 100, 100)} className="h-2" />
+                <Progress
+                  value={Math.min((predictions.length / 4) * 100, 100)}
+                  className="h-2"
+                />
               </div>
             </Card>
           </div>

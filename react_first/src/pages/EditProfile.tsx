@@ -13,7 +13,7 @@ import Footer from "@/components/Shared/Footer";
 import { toast } from "sonner";
 
 export default function EditProfile() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,7 +25,9 @@ export default function EditProfile() {
   });
 
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(user?.profile_picture || null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState<
+    string | null
+  >(user?.profile_picture || null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,11 +77,32 @@ export default function EditProfile() {
     }
   };
 
-  const handleRemovePicture = () => {
+  const handleRemovePicture = async () => {
     setProfilePicture(null);
     setProfilePicturePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+
+    // إذا كان عنده صورة محفوظة، احذفها من السيرفر
+    if (user?.profile_picture) {
+      try {
+        const storedTokens = localStorage.getItem("auth_tokens");
+        const accessToken = storedTokens ? JSON.parse(storedTokens).access : "";
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/profile/picture/`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${accessToken}` },
+          },
+        );
+        if (response.ok) {
+          updateUser({ ...user, profile_picture: null });
+          toast.success("تم حذف الصورة الشخصية");
+        }
+      } catch {
+        toast.error("فشل حذف الصورة من السيرفر");
+      }
     }
   };
 
@@ -89,7 +112,6 @@ export default function EditProfile() {
     setError(null);
 
     try {
-      // الحصول على token
       const storedTokens = localStorage.getItem("auth_tokens");
       let accessToken = "";
       if (storedTokens) {
@@ -97,29 +119,43 @@ export default function EditProfile() {
         accessToken = tokens.access;
       }
 
-      console.log("📤 Sending profile update request...");
-      console.log("Token:", accessToken ? "Present" : "Missing");
+      let response: Response;
 
-      // إرسال كـ JSON
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone: formData.phone || "",
-        }),
-      });
+      if (profilePicture) {
+        // إرسال كـ FormData عند وجود صورة
+        const formDataPayload = new FormData();
+        formDataPayload.append("first_name", formData.first_name);
+        formDataPayload.append("last_name", formData.last_name);
+        formDataPayload.append("email", formData.email);
+        if (formData.phone) formDataPayload.append("phone", formData.phone);
+        formDataPayload.append("profile_picture", profilePicture);
 
-      console.log("📥 Response status:", response.status);
-      console.log("📥 Response headers:", [...response.headers.entries()]);
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            // لا تضيف Content-Type هنا — المتصفح يضيفها تلقائياً مع الـ boundary
+          },
+          body: formDataPayload,
+        });
+      } else {
+        // إرسال كـ JSON عند عدم وجود صورة
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            email: formData.email,
+            phone: formData.phone || "",
+          }),
+        });
+      }
 
       const responseText = await response.text();
-      console.log("📥 Response body:", responseText);
 
       if (!response.ok) {
         const errorData = JSON.parse(responseText);
@@ -127,18 +163,18 @@ export default function EditProfile() {
       }
 
       const result = JSON.parse(responseText);
-      console.log("✅ Success:", result);
 
-      // تحديث بيانات المستخدم في localStorage
+      // تحديث بيانات المستخدم في الـ context والـ localStorage
       if (result.user) {
-        localStorage.setItem("auth_user", JSON.stringify(result.user));
+        updateUser(result.user);
       }
 
       toast.success(result.message || "تم تحديث الملف الشخصي بنجاح");
       navigate("/dashboard");
     } catch (err) {
       console.error("❌ Error:", err);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ غير متوقع";
+      const errorMessage =
+        err instanceof Error ? err.message : "حدث خطأ غير متوقع";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -279,11 +315,7 @@ export default function EditProfile() {
             </div>
 
             {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin ml-2" />

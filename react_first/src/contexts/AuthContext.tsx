@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.tsx
-import React, { createContext, useState, useCallback, useEffect } from 'react';
-import { apiCall, API_ENDPOINTS } from '@/lib/api';
-import { toast } from '@/components/ui/use-toast';
+import React, { createContext, useState, useCallback, useEffect } from "react";
+import { apiCall, API_ENDPOINTS } from "@/lib/api";
+import { toast } from "@/components/ui/use-toast";
 
 // ═══════════════════════════════════════════════════════════════
 // Types
@@ -29,20 +29,26 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Methods
-  register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+  ) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   clearError: () => void;
+  updateUser: (updatedUser: User) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════
 // Storage Helpers
 // ═══════════════════════════════════════════════════════════════
-const TOKENS_KEY = 'auth_tokens';
-const USER_KEY = 'auth_user';
+const TOKENS_KEY = "auth_tokens";
+const USER_KEY = "auth_user";
 
 function getStoredTokens(): TokenPair | null {
   const stored = localStorage.getItem(TOKENS_KEY);
@@ -73,7 +79,9 @@ function clearStoredUser(): void {
 // ═══════════════════════════════════════════════════════════════
 // Context Creation
 // ═══════════════════════════════════════════════════════════════
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
 // ═══════════════════════════════════════════════════════════════
 // Auth Provider Component
@@ -94,15 +102,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const storedUser = getStoredUser();
     const storedTokens = getStoredTokens();
 
-    console.log('🔍 AuthContext - Initial check:');
-    console.log('  Stored User:', storedUser);
-    console.log('  Stored Tokens:', storedTokens ? 'Present' : 'Missing');
+    console.log("🔍 AuthContext - Initial check:");
+    console.log("  Stored User:", storedUser);
+    console.log("  Stored Tokens:", storedTokens ? "Present" : "Missing");
 
     if (storedUser && storedTokens) {
       setUser(storedUser);
-      console.log('✅ Loaded user from localStorage:', storedUser.email);
+      console.log("✅ Loaded user from localStorage:", storedUser.email);
     } else {
-      console.log('ℹ️ No stored user or tokens');
+      console.log("ℹ️ No stored user or tokens");
     }
 
     setIsLoading(false);
@@ -111,57 +119,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // ─────────────────────────────────────────────
   // Register
   // ─────────────────────────────────────────────
-  const register = useCallback(async (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string
-  ) => {
-    setIsLoading(true);
-    setError(null);
+  const register = useCallback(
+    async (
+      email: string,
+      password: string,
+      firstName: string,
+      lastName: string,
+    ) => {
+      setIsLoading(true);
+      setError(null);
 
-    console.log('📝 Register attempt for:', email, firstName, lastName);
+      console.log("📝 Register attempt for:", email, firstName, lastName);
 
-    try {
-      const response = await apiCall<{
-        user: User;
-        tokens: TokenPair;
-        message: string;
-      }>(`${import.meta.env.VITE_API_URL}/api/auth/register/`, {
-        method: 'POST',
-        body: JSON.stringify({
-          email,
-          password,
-          first_name: firstName,
-          last_name: lastName,
-        }),
-      });
+      try {
+        const response = await apiCall<{
+          user: User;
+          tokens: TokenPair;
+          message: string;
+        }>(`${import.meta.env.VITE_API_URL}/api/auth/register/`, {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            password,
+            first_name: firstName,
+            last_name: lastName,
+          }),
+        });
 
-      console.log('📥 Register response:', response);
+        console.log("📥 Register response:", response);
 
-      setStoredTokens(response.tokens);
-      setStoredUser(response.user);
-      setUser(response.user);
+        setStoredTokens(response.tokens);
+        setStoredUser(response.user);
+        setUser(response.user);
 
-      console.log('✅ تم التسجيل بنجاح:', response.user.email);
-      
-      // Force reload to update all components
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } catch (error: unknown) {
-      const message = (error instanceof Error ? error.message : String(error)) || "فشل إنشاء الحساب";
-      setError(message);
-      console.error('❌ Register failed:', message);
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        console.log("✅ تم التسجيل بنجاح:", response.user.email);
+
+        // Force reload to update all components
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      } catch (error: unknown) {
+        const message =
+          (error instanceof Error ? error.message : String(error)) ||
+          "فشل إنشاء الحساب";
+        setError(message);
+        console.error("❌ Register failed:", message);
+        toast({
+          title: "Error",
+          description: message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   // ─────────────────────────────────────────────
   // Login
@@ -170,8 +183,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     setError(null);
 
-    console.log('🔐 Login attempt for:', email);
-    console.log('🔐 Password length:', password.length);
+    console.log("🔐 Login attempt for:", email);
+    console.log("🔐 Password length:", password.length);
 
     try {
       const response = await apiCall<{
@@ -179,31 +192,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
         tokens: TokenPair;
         message: string;
       }>(`${import.meta.env.VITE_API_URL}/api/auth/login/`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ email, password }),
       });
 
-      console.log('📥 Login response:', response);
-      console.log('📥 Response user ID:', response.user?.id);
-      console.log('📥 Response user email:', response.user?.email);
+      console.log("📥 Login response:", response);
+      console.log("📥 Response user ID:", response.user?.id);
+      console.log("📥 Response user email:", response.user?.email);
 
       // ✅ تخزين الـ tokens والـ user
       setStoredTokens(response.tokens);
       setStoredUser(response.user);
       setUser(response.user);
 
-      console.log('✅ تم تسجيل الدخول بنجاح:', response.user.email);
-      console.log('✅ Stored tokens:', response.tokens);
-      console.log('✅ Stored user:', response.user);
+      console.log("✅ تم تسجيل الدخول بنجاح:", response.user.email);
+      console.log("✅ Stored tokens:", response.tokens);
+      console.log("✅ Stored user:", response.user);
 
       // Force reload to update all components
       setTimeout(() => {
         window.location.reload();
       }, 100);
     } catch (error: unknown) {
-      const message = (error instanceof Error ? error.message : String(error)) || "فشل تسجيل الدخول";
+      const message =
+        (error instanceof Error ? error.message : String(error)) ||
+        "فشل تسجيل الدخول";
       setError(message);
-      console.error('❌ Login failed:', message);
+      console.error("❌ Login failed:", message);
       toast({
         title: "Error",
         description: message,
@@ -225,7 +240,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const tokens = getStoredTokens();
       if (tokens?.refresh) {
         await apiCall(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ refresh: tokens.refresh }),
           headers: {
             Authorization: `Bearer ${tokens.access}`,
@@ -233,14 +248,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
       }
     } catch (err) {
-      console.warn('⚠️ خطأ في تسجيل الخروج من الخادم:', err);
+      console.warn("⚠️ خطأ في تسجيل الخروج من الخادم:", err);
       // حتى لو فشل، نحذف البيانات المحلية
     } finally {
       clearStoredTokens();
       clearStoredUser();
       setUser(null);
       setIsLoading(false);
-      console.log('✅ تم تسجيل الخروج');
+      console.log("✅ تم تسجيل الخروج");
     }
   }, []);
 
@@ -251,15 +266,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const tokens = getStoredTokens();
       if (!tokens?.refresh) {
-        throw new Error('لا يوجد refresh token');
+        throw new Error("لا يوجد refresh token");
       }
 
       const response = await apiCall<Record<string, string>>(
         `${import.meta.env.VITE_API_URL}/api/auth/token/refresh/`,
         {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ refresh: tokens.refresh }),
-        }
+        },
       );
 
       // response may contain only `access` or both `access` and `refresh`
@@ -269,9 +284,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
 
       setStoredTokens(newTokens);
-      console.log('✅ تم تحديث الـ token');
+      console.log("✅ تم تحديث الـ token");
     } catch (err) {
-      console.error('❌ فشل تحديث الـ token:', err);
+      console.error("❌ فشل تحديث الـ token:", err);
       // حذف الـ tokens وتسجيل الخروج
       clearStoredTokens();
       clearStoredUser();
@@ -287,6 +302,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   }, []);
 
+  // ─────────────────────────────────────────────
+  // Update User (after profile edit)
+  // ─────────────────────────────────────────────
+  const updateUser = useCallback((updatedUser: User) => {
+    setStoredUser(updatedUser);
+    setUser(updatedUser);
+  }, []);
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -297,12 +320,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     refreshToken,
     clearError,
+    updateUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-

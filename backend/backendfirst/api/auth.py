@@ -16,12 +16,27 @@ from django.utils.encoding import force_bytes, force_str
 from django.conf import settings
 from django.urls import reverse
 from api.models import UserProfile
+import cloudinary.uploader
+import cloudinary
 import re
 import os
 
 # ═══════════════════════════════════════════════════════════════
 # Helper Functions
 # ═══════════════════════════════════════════════════════════════
+
+def get_picture_url(profile) -> str | None:
+    """Return the full Cloudinary URL for a profile picture, or None."""
+    if not profile or not profile.profile_picture:
+        return None
+    value = profile.profile_picture
+    # CloudinaryResource has a .url property; plain strings need cloudinary_url()
+    if hasattr(value, 'url'):
+        return value.url
+    public_id = str(value)
+    url, _ = cloudinary.utils.cloudinary_url(public_id)
+    return url or None
+
 
 def validate_email(email):
     """تحقق من صحة البريد الإلكتروني"""
@@ -132,7 +147,7 @@ def register(request):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "profile_picture": profile.profile_picture.url if profile and profile.profile_picture else None,
+                "profile_picture": get_picture_url(profile),
                 "bio": profile.bio if profile and profile.bio else None,
                 "phone": profile.phone if profile and profile.phone else None,
             },
@@ -152,6 +167,7 @@ def register(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
+    print(f"Login request data: {request.data}")
     """
     تسجيل الدخول
     
@@ -165,6 +181,7 @@ def login(request):
         email = request.data.get('email', '').strip().lower()
         password = request.data.get('password', '').strip()
 
+
         if not email or not password:
             return Response(
                 {"error": "البريد الإلكتروني وكلمة المرور مطلوبان"},
@@ -172,9 +189,16 @@ def login(request):
             )
 
         # محاولة المصادقة
+        from django.contrib.auth.models import User as AuthUser
+        try:
+            db_user = AuthUser.objects.get(username=email)
+        except AuthUser.DoesNotExist:
+            print(f"[DEBUG] No user found with username='{email}'")
+
         user = authenticate(username=email, password=password)
         
-        if not user:
+        if not User:
+            print(f"Login failed for email: {email} and password: {password}")
             return Response(
                 {"error": "البريد الإلكتروني أو كلمة المرور غير صحيحة"},
                 status=status.HTTP_401_UNAUTHORIZED
@@ -194,7 +218,7 @@ def login(request):
                 "username": user.username,
                 "is_staff": user.is_staff,
                 "is_superuser": user.is_superuser,
-                "profile_picture": profile.profile_picture.url if profile and profile.profile_picture else None,
+                "profile_picture": get_picture_url(profile),
                 "bio": profile.bio if profile and profile.bio else None,
                 "phone": profile.phone if profile and profile.phone else None,
             },
@@ -225,7 +249,7 @@ def get_current_user(request):
         "username": user.username,
         "is_staff": user.is_staff,
         "is_superuser": user.is_superuser,
-        "profile_picture": profile.profile_picture.url if profile and profile.profile_picture else None,
+        "profile_picture": get_picture_url(profile),
         "bio": profile.bio if profile and profile.bio else None,
         "phone": profile.phone if profile and profile.phone else None,
     })
@@ -325,19 +349,25 @@ def update_profile(request):
             if not profile:
                 profile = UserProfile.objects.create(user=user)
 
-            # حذف الصورة القديمة إذا وجدت
+            # حذف الصورة القديمة من Cloudinary إذا وجدت
             if profile.profile_picture:
-                old_image_path = profile.profile_picture.path
-                if os.path.exists(old_image_path):
-                    os.remove(old_image_path)
+                try:
+                    old_public_id = str(profile.profile_picture)
+                    cloudinary.uploader.destroy(old_public_id)
+                except Exception as e:
+                    logger.warning(f"[PROFILE UPDATE] Could not delete old Cloudinary image: {e}")
 
-            # حفظ الصورة الجديدة
-            import uuid
-            file_extension = profile_picture.name.split('.')[-1]
-            unique_filename = f"profile_pictures/{user.id}_{uuid.uuid4().hex}.{file_extension}"
-
-            # حفظ الصورة في مجلد media
-            profile.profile_picture.save(unique_filename, profile_picture, save=True)
+            # رفع الصورة الجديدة إلى Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                profile_picture,
+                public_id=f"user_{user.id}",
+                folder='profile_pictures',
+                overwrite=True,
+                resource_type='image',
+                transformation=[{'width': 500, 'height': 500, 'crop': 'fill', 'gravity': 'face', 'quality': 'auto'}],
+            )
+            profile.profile_picture = upload_result['public_id']
+            profile.save()
 
         user.save()
 
@@ -351,7 +381,7 @@ def update_profile(request):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "username": user.username,
-                "profile_picture": profile.profile_picture.url if profile and profile.profile_picture else None,
+                "profile_picture": get_picture_url(profile),
                 "bio": profile.bio if profile and profile.bio else None,
                 "phone": profile.phone if profile and profile.phone else None,
             }
@@ -364,6 +394,42 @@ def update_profile(request):
         return Response({
             "error": f"حدث خطأ: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Delete Profile Picture
+# ═══════════════════════════════════════════════════════════════
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_profile_picture(request):
+    """حذف الصورة الشخصية للمستخدم"""
+    try:
+        user = request.user
+        profile = getattr(user, 'profile', None)
+
+        if not profile or not profile.profile_picture:
+            return Response(
+                {"error": "لا توجد صورة شخصية للحذف"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # حذف الصورة من Cloudinary
+        public_id = str(profile.profile_picture)
+        cloudinary.uploader.destroy(public_id)
+
+        # مسح الحقل في قاعدة البيانات
+        profile.profile_picture = None
+        profile.save()
+
+        return Response(
+            {"message": "تم حذف الصورة الشخصية بنجاح"},
+            status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"حدث خطأ: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 # ═══════════════════════════════════════════════════════════════
