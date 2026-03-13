@@ -368,25 +368,16 @@ const Help = () => {
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
         <DialogContent className="sm:max-w-[500px] h-[600px] flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <MessageCircle className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <DialogTitle>المساعد الطبي الذكي</DialogTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {predictionId ? "متصل بتحليلك الأخير" : "وضع عام"}
-                  </p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                <MessageCircle className="h-5 w-5 text-primary" />
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCloseChat}
-              >
-                <X className="h-5 w-5" />
-              </Button>
+              <div>
+                <DialogTitle className="text-lg">المساعد الطبي الذكي</DialogTitle>
+                <p className="text-xs text-muted-foreground">
+                  {predictionId ? "متصل بتحليلك الأخير" : "وضع عام"}
+                </p>
+              </div>
             </div>
           </DialogHeader>
 
