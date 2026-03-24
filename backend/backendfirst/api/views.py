@@ -293,18 +293,52 @@ def chatbot_predict(request):
         if prediction_id:
             try:
                 prediction = Prediction.objects.get(id=prediction_id)
-                features = {
-                    'glucose': prediction.glucose,
-                    'blood_pressure': prediction.blood_pressure,
-                    'bmi': prediction.bmi,
-                    'age': prediction.age,
-                }
-                probability = prediction.probability
-                risk_level = prediction.risk_level
+                # Check if user is authenticated and this prediction belongs to them
+                # If not authenticated or prediction doesn't belong to user, use default values
+                if request.user.is_authenticated and prediction.user == request.user:
+                    # User owns this prediction - use it
+                    features = {
+                        'glucose': prediction.glucose,
+                        'blood_pressure': prediction.blood_pressure,
+                        'bmi': prediction.bmi,
+                        'age': prediction.age,
+                    }
+                    probability = prediction.probability
+                    risk_level = prediction.risk_level
+                elif not request.user.is_authenticated:
+                    # Not authenticated - use prediction data but don't require ownership
+                    # This allows chatbot to work with localStorage predictions
+                    features = {
+                        'glucose': prediction.glucose,
+                        'blood_pressure': prediction.blood_pressure,
+                        'bmi': prediction.bmi,
+                        'age': prediction.age,
+                    }
+                    probability = prediction.probability
+                    risk_level = prediction.risk_level
+                else:
+                    # Authenticated user trying to access another user's prediction
+                    # Use default values instead
+                    print(f"[CHATBOT] User {request.user.id} tried to access prediction {prediction_id} owned by {prediction.user_id}")
+                    features = {
+                        'glucose': 85,
+                        'blood_pressure': 70,
+                        'bmi': 25,
+                        'age': 35,
+                    }
+                    probability = 5.0
+                    risk_level = "منخفض"
             except Prediction.DoesNotExist:
-                return Response({
-                    "error": "التحليل غير موجود"
-                }, status=status.HTTP_404_NOT_FOUND)
+                # Prediction doesn't exist - use defaults
+                print(f"[CHATBOT] Prediction {prediction_id} not found")
+                features = {
+                    'glucose': 85,
+                    'blood_pressure': 70,
+                    'bmi': 25,
+                    'age': 35,
+                }
+                probability = 5.0
+                risk_level = "منخفض"
         else:
             # لو مفيش prediction_id، نجيب آخر تحليل للمستخدم
             if request.user.is_authenticated:
