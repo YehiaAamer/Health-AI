@@ -1,6 +1,6 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useState, useCallback, useEffect } from "react";
-import { apiCall } from "@/lib/api";
+import { apiCall, API_ENDPOINTS } from "@/lib/api";
 import { toast } from "@/components/ui/use-toast";
 
 // ═══════════════════════════════════════════════════════════════
@@ -30,11 +30,12 @@ export interface AuthContextType {
   isLoading: boolean;
   error: string | null;
 
+  // Methods
   register: (
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
   ) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -79,7 +80,7 @@ function clearStoredUser(): void {
 // Context Creation
 // ═══════════════════════════════════════════════════════════════
 export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
+  undefined,
 );
 
 // ═══════════════════════════════════════════════════════════════
@@ -123,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       email: string,
       password: string,
       firstName: string,
-      lastName: string
+      lastName: string,
     ) => {
       setIsLoading(true);
       setError(null);
@@ -152,26 +153,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(response.user);
 
         console.log("✅ تم التسجيل بنجاح:", response.user.email);
+
+        // Force reload to update all components
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       } catch (error: unknown) {
         const message =
           (error instanceof Error ? error.message : String(error)) ||
           "فشل إنشاء الحساب";
-
         setError(message);
         console.error("❌ Register failed:", message);
-
         toast({
           title: "Error",
           description: message,
           variant: "destructive",
         });
-
-        throw new Error(message);
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   // ─────────────────────────────────────────────
@@ -198,6 +200,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("📥 Response user ID:", response.user?.id);
       console.log("📥 Response user email:", response.user?.email);
 
+      // ✅ تخزين الـ tokens والـ user
       setStoredTokens(response.tokens);
       setStoredUser(response.user);
       setUser(response.user);
@@ -205,55 +208,76 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("✅ تم تسجيل الدخول بنجاح:", response.user.email);
       console.log("✅ Stored tokens:", response.tokens);
       console.log("✅ Stored user:", response.user);
+
+      // Force reload to update all components
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     } catch (error: unknown) {
       const message =
         (error instanceof Error ? error.message : String(error)) ||
         "فشل تسجيل الدخول";
-
       setError(message);
       console.error("❌ Login failed:", message);
-
       toast({
         title: "Error",
         description: message,
         variant: "destructive",
       });
-
-      throw new Error(message);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // ─────────────────────────────────────────────
-  // Logout
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ─────────────────────────────────────────────
+  // Updated Logout by A.M
   // ─────────────────────────────────────────────
   const logout = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
+
+    console.log("🚪 Logout initiated");
 
     try {
       const tokens = getStoredTokens();
 
       if (tokens?.refresh) {
-        await apiCall(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
-          method: "POST",
-          body: JSON.stringify({ refresh: tokens.refresh }),
-          headers: {
-            Authorization: `Bearer ${tokens.access}`,
-          },
-        });
+        console.log("🚪 Calling backend logout endpoint...");
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
+            method: "POST",
+            body: JSON.stringify({ refresh: tokens.refresh }),
+            headers: {
+              Authorization: `Bearer ${tokens.access}`,
+              "Content-Type": "application/json",
+            },
+          });
+          console.log("✅ Backend logout successful");
+        } catch (err) {
+          console.warn("⚠️ Backend logout failed, but continuing with frontend cleanup:", err);
+        }
+      } else {
+        console.log("⚠️ No refresh token found, skipping backend logout");
       }
     } catch (err) {
-      console.warn("⚠️ خطأ في تسجيل الخروج من الخادم:", err);
+      console.error("❌ Logout error:", err);
     } finally {
+      // Always clear local data
       clearStoredTokens();
       clearStoredUser();
       setUser(null);
       setIsLoading(false);
-      console.log("✅ تم تسجيل الخروج");
+      console.log("✅ Logout complete - cleared all local data");
+
+      // Show success toast
+      toast({
+        title: "تم تسجيل الخروج",
+        description: "تم تسجيل خروجك بنجاح",
+      });
     }
   }, []);
+  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // ─────────────────────────────────────────────
   // Refresh Token
@@ -261,7 +285,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshToken = useCallback(async () => {
     try {
       const tokens = getStoredTokens();
-
       if (!tokens?.refresh) {
         throw new Error("لا يوجد refresh token");
       }
@@ -271,9 +294,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         {
           method: "POST",
           body: JSON.stringify({ refresh: tokens.refresh }),
-        }
+        },
       );
 
+      // response may contain only `access` or both `access` and `refresh`
       const newTokens: TokenPair = {
         access: response.access || tokens.access,
         refresh: response.refresh || tokens.refresh,
@@ -283,6 +307,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("✅ تم تحديث الـ token");
     } catch (err) {
       console.error("❌ فشل تحديث الـ token:", err);
+      // حذف الـ tokens وتسجيل الخروج
       clearStoredTokens();
       clearStoredUser();
       setUser(null);
@@ -298,7 +323,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   // ─────────────────────────────────────────────
-  // Update User
+  // Update User (after profile edit)
   // ─────────────────────────────────────────────
   const updateUser = useCallback((updatedUser: User) => {
     setStoredUser(updatedUser);
@@ -320,3 +345,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // ─────────────────────────────────────────────
+  // Original Logout
+  // ─────────────────────────────────────────────
+  // const logout = useCallback(async () => {
+  //   setIsLoading(true);
+  //   setError(null);
+
+  //   try {
+  //     const tokens = getStoredTokens();
+  //     if (tokens?.refresh) {
+  //       await apiCall(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
+  //         method: "POST",
+  //         body: JSON.stringify({ refresh: tokens.refresh }),
+  //         headers: {
+  //           Authorization: `Bearer ${tokens.access}`,
+  //         },
+  //       });
+  //     }
+  //   } catch (err) {
+  //     console.warn("⚠️ خطأ في تسجيل الخروج من الخادم:", err);
+  //     // حتى لو فشل، نحذف البيانات المحلية
+  //   } finally {
+  //     clearStoredTokens();
+  //     clearStoredUser();
+  //     setUser(null);
+  //     setIsLoading(false);
+  //     console.log("✅ تم تسجيل الخروج");
+  //   }
+  // }, []);
