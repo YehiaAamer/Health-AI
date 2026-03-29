@@ -1,13 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
+import { Bell, User, Settings, LogOut, Globe } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const Activity = ({ className }: { className?: string }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg"
   >
     <path
       d="M3 12h4l3-9 4 18 3-9h4"
@@ -24,91 +26,190 @@ interface HeaderProps {
 }
 
 const Header = ({ variant = "default" }: HeaderProps) => {
+  const { user, logout, isLoading } = useAuth();
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // ← Added for better UX
+  const menuRef = useRef<HTMLDivElement>(null);
+  const isArabic = i18n.language.startsWith("ar");
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+    } finally {
+      setIsLoggingOut(false);
+      navigate("/auth?tab=login");
+    }
+  };
+
+  const handleToggleLanguage = async () => {
+    const newLang = isArabic ? "en" : "ar";
+    await i18n.changeLanguage(newLang);
+    setMenuOpen(false);
+  };
+
+  const renderUserMenu = () => (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        onClick={() => setMenuOpen((prev) => !prev)}
+        className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center hover:scale-105 transition"
+        disabled={isLoggingOut}
+      >
+        {user?.profile_picture ? (
+          <img
+            src={user.profile_picture}
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <User className="h-5 w-5 text-white" />
+        )}
+      </button>
+
+      {menuOpen && (
+        <div
+          className="absolute top-full right-0 mt-2 w-56 min-w-[14rem] rounded-xl border bg-background shadow-lg z-50 overflow-hidden origin-top-right"
+          dir={isArabic ? "rtl" : "ltr"}
+        >
+          {/* User Info */}
+          <div
+            className={`px-4 py-3 border-b ${
+              isArabic ? "text-right" : "text-left"
+            }`}
+          >
+            <p className="font-semibold text-sm truncate">
+              {user?.first_name
+                ? `${user.first_name} ${user?.last_name || ""}`
+                : t("myAccount")}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.email || ""}
+            </p>
+          </div>
+
+          {/* Settings */}
+          <button
+            onClick={() => {
+              setMenuOpen(false);
+              navigate("/edit-profile");
+            }}
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
+              isArabic ? "flex-row-reverse text-right" : "text-left"
+            }`}
+            disabled={isLoggingOut}
+          >
+            <Settings className="h-4 w-4" />
+            {t("settings")}
+          </button>
+
+          {/* Language */}
+          <button
+            onClick={handleToggleLanguage}
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
+              isArabic ? "flex-row-reverse text-right" : "text-left"
+            }`}
+            disabled={isLoggingOut}
+          >
+            <Globe className="h-4 w-4" />
+            {isArabic ? "English" : "العربية"}
+          </button>
+
+          {/* Logout - Most Important Part */}
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent text-red-600 hover:text-red-700 ${
+              isArabic ? "flex-row-reverse text-right" : "text-left"
+            }`}
+          >
+            <LogOut className="h-4 w-4" />
+            {isLoggingOut ? t("loggingOut") || "جاري تسجيل الخروج..." : t("logout")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <header className="w-full border-b bg-background">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/home" className="flex items-center gap-2">
-          <Activity className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold">HealthAI</span>
-        </Link>
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center gap-4" dir="ltr">
+          
+          {/* Logo */}
+          <Link to="/home" className="flex items-center gap-2">
+            <Activity className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold">HealthAI</span>
+          </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
-          {variant === "auth" ? (
-            <Link
-              to="/home"
-              className="text-muted-foreground hover:text-primary transition-colors"
-            >
-              Home
-            </Link>
-          ) : variant === "dashboard" ? (
-            <>
-              <Link
-                to="/dashboard"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/report"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Reports
-              </Link>
-              <Link
-                to="/consultations"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Consultations
-              </Link>
-              <Link
-                to="/help"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Help
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/home"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Home
-              </Link>
-              <Link
-                to="/help"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                FAQs
-              </Link>
-              <Link
-                to="/help"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Contact
-              </Link>
-            </>
-          )}
-        </nav>
+          {/* NAVBAR */}
+          <nav className="hidden md:flex flex-1 justify-center gap-6">
+            {variant === "auth" ? (
+              <Link to="/home">{t("home")}</Link>
+            ) : user ? (
+              <>
+                <Link to="/home">{t("home")}</Link>
+                <Link to="/dashboard">{t("dashboard.title")}</Link>
+                <Link to="/past-reports">{t("reports")}</Link>
+                <Link to="/consultations">{t("consultations")}</Link>
+                <Link to="/help">{t("helpNav")}</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/home">{t("home")}</Link>
+                <Link to="/help">{t("helpNav")}</Link>
+                <Link to="/contact">{t("contact")}</Link>
+              </>
+            )}
+          </nav>
 
-        <div className="flex items-center gap-4">
-          {variant === "dashboard" ? (
-            <>
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-              </Button>
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-cyan-600 rounded-full" />
-            </>
-          ) : variant === "auth" ? null : (
-            <>
-              <Link to="/login">
-                <Button variant="ghost">Login</Button>
-              </Link>
-              <Link to="/signup">
-                <Button>Get Started</Button>
-              </Link>
-            </>
-          )}
+          {/* RIGHT SIDE */}
+          <div className="flex items-center gap-2 ms-auto">
+            
+            <Button variant="ghost" size="icon" onClick={handleToggleLanguage}>
+              <Globe className="h-5 w-5" />
+            </Button>
+
+            {user ? (
+              <>
+                {/* Notification Bell */}
+                <Button variant="ghost" size="icon">
+                  <Bell className="h-5 w-5" />
+                </Button>
+
+                {renderUserMenu()}
+              </>
+            ) : (
+              !isLoading && (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost">{t("login")}</Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button>{t("getStarted")}</Button>
+                  </Link>
+                </>
+              )
+            )}
+          </div>
         </div>
       </div>
     </header>
