@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'api',
 ]
 
@@ -105,6 +106,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'BLACKLIST_ENABLED': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
 }
@@ -197,14 +199,6 @@ cloudinary.config(
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
-STATIC_URL = 'static/'
 
 # ═══════════════════════════════════════════════════════════════
 # Medgamma / Ollama Configuration
