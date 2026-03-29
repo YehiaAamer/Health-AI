@@ -31,6 +31,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   const navigate = useNavigate();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // ← Added for better UX
   const menuRef = useRef<HTMLDivElement>(null);
   const isArabic = i18n.language.startsWith("ar");
 
@@ -49,9 +50,12 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
   const handleLogout = async () => {
     setMenuOpen(false);
+    setIsLoggingOut(true);
+
     try {
       await logout();
     } finally {
+      setIsLoggingOut(false);
       navigate("/auth?tab=login");
     }
   };
@@ -68,6 +72,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
         type="button"
         onClick={() => setMenuOpen((prev) => !prev)}
         className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center hover:scale-105 transition"
+        disabled={isLoggingOut}
       >
         {user?.profile_picture ? (
           <img
@@ -110,6 +115,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
             className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
               isArabic ? "flex-row-reverse text-right" : "text-left"
             }`}
+            disabled={isLoggingOut}
           >
             <Settings className="h-4 w-4" />
             {t("settings")}
@@ -121,20 +127,22 @@ const Header = ({ variant = "default" }: HeaderProps) => {
             className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
               isArabic ? "flex-row-reverse text-right" : "text-left"
             }`}
+            disabled={isLoggingOut}
           >
             <Globe className="h-4 w-4" />
             {isArabic ? "English" : "العربية"}
           </button>
 
-          {/* Logout */}
+          {/* Logout - Most Important Part */}
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
+            disabled={isLoggingOut}
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent text-red-600 hover:text-red-700 ${
               isArabic ? "flex-row-reverse text-right" : "text-left"
             }`}
           >
             <LogOut className="h-4 w-4" />
-            {t("logout")}
+            {isLoggingOut ? t("loggingOut") || "جاري تسجيل الخروج..." : t("logout")}
           </button>
         </div>
       )}
@@ -182,7 +190,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
             {user ? (
               <>
-                {/* 🔔 النوتيفيكيشن ثابتة هنا */}
+                {/* Notification Bell */}
                 <Button variant="ghost" size="icon">
                   <Bell className="h-5 w-5" />
                 </Button>
