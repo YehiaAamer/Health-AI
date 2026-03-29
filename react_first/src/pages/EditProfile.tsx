@@ -30,10 +30,16 @@ export default function EditProfile() {
 
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(
-    user?.profile_picture || null,
+    user?.profile_picture || null
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -50,10 +56,7 @@ export default function EditProfile() {
     }
   }, [user]);
 
-  if (!isAuthenticated) {
-    navigate("/auth");
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -100,7 +103,7 @@ export default function EditProfile() {
           {
             method: "DELETE",
             headers: { Authorization: `Bearer ${accessToken}` },
-          },
+          }
         );
 
         if (response.ok) {

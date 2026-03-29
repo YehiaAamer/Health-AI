@@ -144,6 +144,36 @@ const ar = {
     }
   },
 
+  editProfile: {
+    title: "تعديل الملف الشخصي",
+    defaultName: "المستخدم",
+    profileImageAlt: "الصورة الشخصية",
+    changePhoto: "تغيير الصورة",
+    removePhoto: "إزالة الصورة",
+    firstName: "الاسم الأول",
+    lastName: "اسم العائلة",
+    email: "البريد الإلكتروني",
+    phone: "رقم الهاتف",
+    saveChanges: "حفظ التغييرات",
+    saving: "جاري الحفظ...",
+    forgotPassword: "هل نسيت كلمة المرور؟",
+    placeholders: {
+      firstName: "أدخل الاسم الأول",
+      lastName: "أدخل اسم العائلة",
+      email: "أدخل البريد الإلكتروني",
+      phone: "أدخل رقم الهاتف"
+    },
+    toasts: {
+      invalidImage: "يرجى اختيار ملف صورة صالح",
+      imageTooLarge: "حجم الصورة يجب ألا يتجاوز 5 ميجابايت",
+      pictureDeleted: "تم حذف الصورة الشخصية بنجاح",
+      deleteFailed: "فشل حذف الصورة الشخصية",
+      updateFailed: "فشل تحديث الملف الشخصي",
+      updateSuccess: "تم تحديث الملف الشخصي بنجاح",
+      unexpectedError: "حدث خطأ غير متوقع"
+    }
+  },
+
   forgotPassword: {
     title: "نسيت كلمة المرور؟",
     subtitle:
@@ -411,12 +441,11 @@ const ar = {
     bloodPressure: "ضغط الدم",
     bmi: "مؤشر كتلة الجسم",
     riskLow: "منخفض",
-riskMedium: "متوسط",
-riskHigh: "مرتفع",
-riskVeryHigh: "مرتفع جدًا",
-unknownRisk: "غير معروف",
+    riskMedium: "متوسط",
+    riskHigh: "مرتفع",
+    riskVeryHigh: "مرتفع جدًا",
+    unknownRisk: "غير معروف",
     reportId: "رقم التقرير"
-    
   },
 
   consultationsPage: {
