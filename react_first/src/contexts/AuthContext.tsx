@@ -229,35 +229,55 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  // ─────────────────────────────────────────────
-  // Logout
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ─────────────────────────────────────────────
+  // Updated Logout by A.M
   // ─────────────────────────────────────────────
   const logout = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
+
+    console.log("🚪 Logout initiated");
 
     try {
       const tokens = getStoredTokens();
+
       if (tokens?.refresh) {
-        await apiCall(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
-          method: "POST",
-          body: JSON.stringify({ refresh: tokens.refresh }),
-          headers: {
-            Authorization: `Bearer ${tokens.access}`,
-          },
-        });
+        console.log("🚪 Calling backend logout endpoint...");
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
+            method: "POST",
+            body: JSON.stringify({ refresh: tokens.refresh }),
+            headers: {
+              Authorization: `Bearer ${tokens.access}`,
+              "Content-Type": "application/json",
+            },
+          });
+          console.log("✅ Backend logout successful");
+        } catch (err) {
+          console.warn("⚠️ Backend logout failed, but continuing with frontend cleanup:", err);
+        }
+      } else {
+        console.log("⚠️ No refresh token found, skipping backend logout");
       }
     } catch (err) {
-      console.warn("⚠️ خطأ في تسجيل الخروج من الخادم:", err);
-      // حتى لو فشل، نحذف البيانات المحلية
+      console.error("❌ Logout error:", err);
     } finally {
+      // Always clear local data
       clearStoredTokens();
       clearStoredUser();
       setUser(null);
       setIsLoading(false);
-      console.log("✅ تم تسجيل الخروج");
+      console.log("✅ Logout complete - cleared all local data");
+
+      // Show success toast
+      toast({
+        title: "تم تسجيل الخروج",
+        description: "تم تسجيل خروجك بنجاح",
+      });
     }
   }, []);
+  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // ─────────────────────────────────────────────
   // Refresh Token
@@ -325,3 +345,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // ─────────────────────────────────────────────
+  // Original Logout
+  // ─────────────────────────────────────────────
+  // const logout = useCallback(async () => {
+  //   setIsLoading(true);
+  //   setError(null);
+
+  //   try {
+  //     const tokens = getStoredTokens();
+  //     if (tokens?.refresh) {
+  //       await apiCall(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
+  //         method: "POST",
+  //         body: JSON.stringify({ refresh: tokens.refresh }),
+  //         headers: {
+  //           Authorization: `Bearer ${tokens.access}`,
+  //         },
+  //       });
+  //     }
+  //   } catch (err) {
+  //     console.warn("⚠️ خطأ في تسجيل الخروج من الخادم:", err);
+  //     // حتى لو فشل، نحذف البيانات المحلية
+  //   } finally {
+  //     clearStoredTokens();
+  //     clearStoredUser();
+  //     setUser(null);
+  //     setIsLoading(false);
+  //     console.log("✅ تم تسجيل الخروج");
+  //   }
+  // }, []);
