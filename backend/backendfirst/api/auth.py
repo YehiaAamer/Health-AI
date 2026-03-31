@@ -194,10 +194,6 @@ def login(request):
             db_user = AuthUser.objects.get(username=email)
         except AuthUser.DoesNotExist:
             print(f"[DEBUG] No user found with username='{email}'")
-            return Response(
-                {"error": "البريد الإلكتروني أو كلمة المرور غير صحيحة"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
 
         user = authenticate(username=email, password=password)
 
@@ -437,32 +433,32 @@ def delete_profile_picture(request):
 
 
 # ═══════════════════════════════════════════════════════════════
-# Logout (Refresh Token Blacklist)
+# Original Logout (Refresh Token Blacklist)
 # ═══════════════════════════════════════════════════════════════
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def logout(request):
-    """تسجيل الخروج"""
-    try:
-        refresh_token = request.data.get('refresh')
-        if not refresh_token:
-            return Response(
-                {"error": "refresh token مطلوب"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def logout(request):
+#     """تسجيل الخروج"""
+#     try:
+#         refresh_token = request.data.get('refresh')
+#         if not refresh_token:
+#             return Response(
+#                 {"error": "refresh token مطلوب"},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
 
-        token = RefreshToken(refresh_token)
-        token.blacklist()
+#         token = RefreshToken(refresh_token)
+#         token.blacklist()
 
-        return Response(
-            {"message": "تم تسجيل الخروج بنجاح"},
-            status=status.HTTP_200_OK
-        )
-    except Exception as e:
-        return Response(
-            {"error": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+#         return Response(
+#             {"message": "تم تسجيل الخروج بنجاح"},
+#             status=status.HTTP_200_OK
+#         )
+#     except Exception as e:
+#         return Response(
+#             {"error": str(e)},
+#             status=status.HTTP_400_BAD_REQUEST
+#         )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -610,4 +606,63 @@ def password_reset_confirm(request):
             {"error": f"حدث خطأ: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+#################################################################################################################
 
+# ═══════════════════════════════════════════════════════════════
+# Backend - Logout API Endpoint by A.M
+# ═══════════════════════════════════════════════════════════════
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    """
+    تسجيل الخروج - يقوم بإبطال الـ refresh token
+    
+    POST /api/auth/logout/
+    {
+        "refresh": "your-refresh-token"
+    }
+    """
+    try:
+        refresh_token = request.data.get('refresh')
+        
+        print(f"[LOGOUT] Attempting logout for user: {request.user.email}")
+        print(f"[LOGOUT] Refresh token received: {'Yes' if refresh_token else 'No'}")
+        
+        if not refresh_token:
+            print("[LOGOUT] ❌ No refresh token provided")
+            return Response(
+                {"error": "refresh token مطلوب"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            token = RefreshToken(refresh_token)
+            # Verify the token belongs to this user
+            if token['user_id'] != request.user.id:
+                print("[LOGOUT] ❌ Token user ID mismatch")
+                return Response(
+                    {"error": "token غير صالح"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            token.blacklist()
+            print(f"[LOGOUT] ✅ Successfully logged out user: {request.user.email}")
+            
+            return Response(
+                {"message": "تم تسجيل الخروج بنجاح"},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            print(f"[LOGOUT] ❌ Error blacklisting token: {str(e)}")
+            # Even if blacklisting fails, we consider the user logged out on the frontend
+            return Response(
+                {"message": "تم تسجيل الخروج بنجاح", "warning": "فشل إبطال الـ token"},
+                status=status.HTTP_200_OK
+            )
+            
+    except Exception as e:
+        print(f"[LOGOUT] ❌ Unexpected error: {str(e)}")
+        return Response(
+            {"error": f"حدث خطأ: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
