@@ -28,8 +28,6 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
   const menuRef = useRef<HTMLDivElement>(null);
   const isArabic = i18n.language.startsWith("ar");
 
@@ -63,12 +61,9 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   const handleLogout = async () => {
     setMenuOpen(false);
     setMobileNavOpen(false);
-    setIsLoggingOut(true);
-
     try {
       await logout();
     } finally {
-      setIsLoggingOut(false);
       navigate("/auth?tab=login");
     }
   };
@@ -104,7 +99,11 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
     if (variant === "auth") {
       return (
-        <NavLink to="/home" className={cls}>
+        <NavLink
+          to="/home"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
           {t("home")}
         </NavLink>
       );
@@ -113,20 +112,68 @@ const Header = ({ variant = "default" }: HeaderProps) => {
     if (user) {
       return (
         <>
-          <NavLink to="/home" className={cls}>{t("home")}</NavLink>
-          <NavLink to="/dashboard" className={cls}>{t("dashboard.title")}</NavLink>
-          <NavLink to="/past-reports" className={cls}>{t("reports")}</NavLink>
-          <NavLink to="/consultations" className={cls}>{t("consultations")}</NavLink>
-          <NavLink to="/help" className={cls}>{t("helpNav")}</NavLink>
+          <NavLink
+            to="/home"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("home")}
+          </NavLink>
+          <NavLink
+            to="/dashboard"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("dashboard.title")}
+          </NavLink>
+          <NavLink
+            to="/past-reports"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("reports")}
+          </NavLink>
+          <NavLink
+            to="/consultations"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("consultations")}
+          </NavLink>
+          <NavLink
+            to="/help"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("helpNav")}
+          </NavLink>
         </>
       );
     }
 
     return (
       <>
-        <NavLink to="/home" className={cls}>{t("home")}</NavLink>
-        <NavLink to="/help" className={cls}>{t("helpNav")}</NavLink>
-        <NavLink to="/contact" className={cls}>{t("contact")}</NavLink>
+        <NavLink
+          to="/home"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
+          {t("home")}
+        </NavLink>
+        <NavLink
+          to="/help"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
+          {t("helpNav")}
+        </NavLink>
+        <NavLink
+          to="/contact"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
+          {t("contact")}
+        </NavLink>
       </>
     );
   };
@@ -134,35 +181,74 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   const renderUserMenu = () => (
     <div className="relative" ref={menuRef}>
       <button
+        type="button"
         onClick={() => setMenuOpen((prev) => !prev)}
-        className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center"
+        className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center hover:scale-105 transition"
       >
         {user?.profile_picture ? (
-          <img src={user.profile_picture} className="w-full h-full object-cover" />
+          <img
+            src={user.profile_picture}
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
         ) : (
           <User className="h-5 w-5 text-white" />
         )}
       </button>
 
       {menuOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-xl border bg-background shadow-lg z-50">
-          <button onClick={() => navigate("/edit-profile")} className="w-full px-4 py-3 flex gap-2">
+        <div
+          className={`absolute top-full mt-2 w-56 min-w-[14rem] rounded-xl border bg-background shadow-lg z-50 overflow-hidden ${
+            isArabic ? "left-0 origin-top-left" : "right-0 origin-top-right"
+          }`}
+          dir={isArabic ? "rtl" : "ltr"}
+        >
+          <div
+            className={`px-4 py-3 border-b ${
+              isArabic ? "text-right" : "text-left"
+            }`}
+          >
+            <p className="font-semibold text-sm truncate">
+              {user?.first_name
+                ? `${user.first_name} ${user?.last_name || ""}`
+                : t("myAccount")}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.email || ""}
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              setMenuOpen(false);
+              navigate("/edit-profile");
+            }}
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
+              isArabic ? "flex-row-reverse text-right" : "text-left"
+            }`}
+          >
             <Settings className="h-4 w-4" />
             {t("settings")}
           </button>
 
-          <button onClick={handleToggleLanguage} className="w-full px-4 py-3 flex gap-2">
+          <button
+            onClick={handleToggleLanguage}
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
+              isArabic ? "flex-row-reverse text-right" : "text-left"
+            }`}
+          >
             <Globe className="h-4 w-4" />
             {isArabic ? "English" : "العربية"}
           </button>
 
           <button
             onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="w-full px-4 py-3 flex gap-2 text-red-600"
+            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
+              isArabic ? "flex-row-reverse text-right" : "text-left"
+            }`}
           >
             <LogOut className="h-4 w-4" />
-            {isLoggingOut ? "Logging out..." : t("logout")}
+            {t("logout")}
           </button>
         </div>
       )}
@@ -171,42 +257,120 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
   return (
     <>
-      <header className="w-full border-b bg-background">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/home" className="flex items-center gap-2">
-            <Activity className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">HealthAI</span>
-          </Link>
+      <header
+        className="w-full border-b bg-background"
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
+            {/* Logo */}
+            <div className="min-w-0 md:justify-self-start">
+              <Link to="/home" className="flex items-center gap-2 w-fit">
+                <Activity className="h-8 w-8 text-primary shrink-0" />
+                <span className="text-xl font-bold">HealthAI</span>
+              </Link>
+            </div>
 
-          <nav className="hidden md:flex gap-6">
-            {renderMainLinks()}
-          </nav>
+            {/* Desktop NAVBAR */}
+            <nav
+              className={`hidden md:flex items-center justify-center gap-6 md:justify-self-center ${
+                isArabic ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              {renderMainLinks(false)}
+            </nav>
 
-          <div className="flex items-center gap-2">
-            <Button className="md:hidden" onClick={() => setMobileNavOpen(true)}>
-              <Menu />
-            </Button>
+            {/* Right Side */}
+            <div className="flex items-center gap-2 shrink-0 md:justify-self-end">
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open navigation menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
 
-            <Button onClick={handleToggleLanguage}>
-              <Globe />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleLanguage}
+              >
+                <Globe className="h-5 w-5" />
+              </Button>
 
-            {user ? (
-              <>
-                <Bell />
-                {renderUserMenu()}
-              </>
-            ) : (
-              !isLoading && (
+              {user ? (
                 <>
-                  <Link to="/login"><Button>{t("login")}</Button></Link>
-                  <Link to="/signup"><Button>{t("getStarted")}</Button></Link>
+                  <Button variant="ghost" size="icon">
+                    <Bell className="h-5 w-5" />
+                  </Button>
+                  {renderUserMenu()}
                 </>
-              )
-            )}
+              ) : (
+                !isLoading && (
+                  <div className="hidden md:flex items-center gap-2">
+                    <Link to="/login">
+                      <Button variant="ghost">{t("login")}</Button>
+                    </Link>
+                    <Link to="/signup">
+                      <Button>{t("getStarted")}</Button>
+                    </Link>
+                  </div>
+                )
+              )}
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Side Drawer */}
+      {mobileNavOpen && (
+        <div className="md:hidden fixed inset-0 z-[100]">
+          <div className="absolute inset-0 bg-black/40" onClick={closeMobileNav} />
+
+          <div
+            dir={isArabic ? "rtl" : "ltr"}
+            className={`absolute top-0 h-full w-[280px] bg-background shadow-2xl border-l border-r transition-all duration-300 ${
+              isArabic ? "left-0" : "right-0"
+            }`}
+          >
+            <div className="flex items-center justify-between px-4 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <Activity className="h-7 w-7 text-primary" />
+                <span className="text-lg font-bold">HealthAI</span>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeMobileNav}
+                aria-label="Close navigation menu"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="px-3 py-4 space-y-2">
+              {renderMainLinks(true)}
+
+              {!user && !isLoading && (
+                <div className="pt-3 space-y-2">
+                  <Link to="/login" onClick={closeMobileNav}>
+                    <Button variant="ghost" className="w-full">
+                      {t("login")}
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={closeMobileNav}>
+                    <Button className="w-full">{t("getStarted")}</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
