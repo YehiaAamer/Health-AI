@@ -17,14 +17,17 @@ import {
   Stethoscope,
   PhoneCall,
   Settings,
+  ChevronDown,
+  User,
 } from "lucide-react";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { toast } from "sonner";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiCall, API_ENDPOINTS } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useIsVisible } from "@/hooks/useIsVisible";
 
 interface Prediction {
   id: number;
@@ -47,10 +50,23 @@ const Dashboard = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
 
+  const sidebarRef = useRef(null);
+  const heroRef = useRef(null);
+  const statsRef = useRef(null);
+  const analysesRef = useRef(null);
+  const doctorRef = useRef(null);
+
+  const sidebarVisible = useIsVisible(sidebarRef);
+  const heroVisible = useIsVisible(heroRef);
+  const statsVisible = useIsVisible(statsRef);
+  const analysesVisible = useIsVisible(analysesRef);
+  const doctorVisible = useIsVisible(doctorRef);
+
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchPredictions = async () => {
@@ -130,6 +146,20 @@ const Dashboard = () => {
     }
   };
 
+  const formatNumber = (
+    value: number,
+    options?: Intl.NumberFormatOptions
+  ) => {
+    return value.toLocaleString(isArabic ? "ar-EG" : "en-US", options);
+  };
+
+  const formatValue = (
+    value?: number | null,
+    options?: Intl.NumberFormatOptions
+  ) => {
+    return value != null ? formatNumber(value, options) : "--";
+  };
+
   const normalizeSearchText = (value: unknown) => {
     return String(value ?? "")
       .toLowerCase()
@@ -170,7 +200,7 @@ const Dashboard = () => {
 
       return searchableContent.includes(query);
     });
-  }, [predictions, searchTerm, isArabic]);
+  }, [predictions, searchTerm, isArabic, t]);
 
   const latestPrediction = predictions[0];
 
@@ -216,6 +246,84 @@ const Dashboard = () => {
   const completionTarget = Math.max(filteredPredictions.length + 1, 4);
   const completionValue = Math.min((filteredPredictions.length / 4) * 100, 100);
 
+  const sidebarContent = (
+    <>
+      <div className="flex items-center gap-3 pb-4 border-b">
+        <div className="w-11 h-11 rounded-full overflow-hidden bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center shrink-0">
+          {user?.profile_picture ? (
+            <img
+              src={user.profile_picture}
+              alt={user?.first_name || user?.email || "Profile"}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="h-5 w-5 text-white" />
+          )}
+        </div>
+
+        <div className="min-w-0">
+          <p className="font-semibold truncate">
+            {user?.first_name || user?.email || "User"}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            {user?.email || "HealthAI Account"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          {t("dashboard.mainMenu")}
+        </p>
+
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 rounded-xl bg-primary/10 text-primary px-3 py-3 font-medium">
+            <LayoutDashboard className="h-5 w-5" />
+            <span>{t("dashboard.title")}</span>
+          </div>
+
+          <Link to="/diagnosis" className="block">
+            <div className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors">
+              <Beaker className="h-5 w-5 text-muted-foreground" />
+              <span>{t("dashboard.newCheckup")}</span>
+            </div>
+          </Link>
+
+          <Link
+            to="/past-reports"
+            className="block"
+            onClick={() => {
+              if (predictions.length === 0) {
+                toast.info(t("dashboard.noReportsYet"));
+              }
+            }}
+          >
+            <div className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <span>{t("dashboard.previousReports")}</span>
+            </div>
+          </Link>
+
+          <Link to="/consultations" className="block">
+            <div className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <span>{t("dashboard.bookConsultation")}</span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="mt-4 pt-4 border-t">
+          <Link to="/edit-profile" className="block">
+            <div className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors">
+              <Settings className="h-5 w-5 text-muted-foreground" />
+              <span>{t("dashboard.settings")}</span>
+            </div>
+          </Link>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div
       className="min-h-screen flex flex-col bg-background"
@@ -224,75 +332,55 @@ const Dashboard = () => {
       <Header variant="dashboard" />
 
       <main className="flex-1 container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-[230px_minmax(0,1fr)] gap-6">
-          <aside className="hidden xl:block">
-            <Card className="rounded-[24px] border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-3 pb-4 border-b">
-                <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Stethoscope className="h-5 w-5 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">
-                    {user?.first_name || user?.email || "User"}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user?.email || "HealthAI Account"}
-                  </p>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 xl:grid-cols-[230px_minmax(0,1fr)] gap-6 items-start">
+          <div className="xl:hidden">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              className="mb-4 flex items-center gap-2 rounded-xl border bg-card px-4 py-3 shadow-sm"
+            >
+              <ChevronDown
+                className={`h-5 w-5 transition-transform duration-300 ${
+                  isSidebarOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-              <div className="mt-5">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  {t("dashboard.mainMenu")}
-                </p>
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-out ${
+                isSidebarOpen
+                  ? "max-h-[600px] opacity-100 mb-4"
+                  : "max-h-0 opacity-0"
+              }`}
+            >
+              <Card className="rounded-[24px] border bg-card p-4 shadow-sm">
+                {sidebarContent}
+              </Card>
+            </div>
+          </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 rounded-xl bg-primary/10 text-primary px-3 py-3 font-medium">
-                    <LayoutDashboard className="h-5 w-5" />
-                    <span>{t("dashboard.title")}</span>
-                  </div>
-
-                  <Link to="/diagnosis" className="block">
-                    <div className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors">
-                      <Beaker className="h-5 w-5 text-muted-foreground" />
-                      <span>{t("dashboard.newCheckup")}</span>
-                    </div>
-                  </Link>
-
-                  <div
-                    className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors cursor-pointer"
-                    onClick={() => {
-                      if (predictions.length === 0) {
-                        toast.info(t("dashboard.noReportsYet"));
-                      }
-                    }}
-                  >
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <span>{t("dashboard.previousReports")}</span>
-                  </div>
-
-                  <Link to="/consultations" className="block">
-                    <div className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
-                      <span>{t("dashboard.bookConsultation")}</span>
-                    </div>
-                  </Link>
-                </div>
-
-                <div className="mt-4 pt-4 border-t">
-                  <Link to="/edit-profile" className="block">
-                    <div className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-accent transition-colors">
-                      <Settings className="h-5 w-5 text-muted-foreground" />
-                      <span>{t("dashboard.settings")}</span>
-                    </div>
-                  </Link>
-                </div>
-              </div>
+          <aside
+            ref={sidebarRef}
+            className={`hidden xl:block transition-all duration-700 ease-out ${
+              sidebarVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
+            <Card className="rounded-[24px] border bg-card p-4 shadow-sm xl:sticky xl:top-24">
+              {sidebarContent}
             </Card>
           </aside>
 
           <div className="space-y-5 min-w-0">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div
+              ref={heroRef}
+              className={`flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between transition-all duration-700 ease-out delay-100 ${
+                heroVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               <div className={isArabic ? "text-right" : "text-left"}>
                 <h1 className="text-3xl font-bold">{t("dashboard.title")}</h1>
                 <p className="text-muted-foreground mt-1">
@@ -315,7 +403,9 @@ const Dashboard = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t("dashboard.search")}
                     className={`rounded-xl h-11 ${
-                      isArabic ? "pr-9 pl-10 text-right" : "pl-9 pr-10 text-left"
+                      isArabic
+                        ? "pr-9 pl-10 text-right"
+                        : "pl-9 pr-10 text-left"
                     }`}
                   />
                   {searchTerm && (
@@ -341,7 +431,14 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <section
+              ref={statsRef}
+              className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 transition-all duration-700 ease-out delay-200 ${
+                statsVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               <Card className="rounded-[20px] border bg-card p-5 shadow-sm">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Activity className="h-5 w-5 text-primary" />
@@ -351,7 +448,10 @@ const Dashboard = () => {
                 </p>
                 <h3 className="text-3xl font-bold">
                   {filteredPredictions.length
-                    ? `${averageRisk.toFixed(2)}%`
+                    ? `${formatNumber(averageRisk, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}%`
                     : "--"}
                 </h3>
               </Card>
@@ -378,7 +478,7 @@ const Dashboard = () => {
                   {t("dashboard.savedReports")}
                 </p>
                 <h3 className="text-3xl font-bold">
-                  {filteredPredictions.length}
+                  {formatNumber(filteredPredictions.length)}
                 </h3>
               </Card>
 
@@ -399,7 +499,14 @@ const Dashboard = () => {
               </Card>
             </section>
 
-            <section className="grid grid-cols-1 gap-5 items-start">
+            <section
+              ref={analysesRef}
+              className={`grid grid-cols-1 gap-5 items-start transition-all duration-700 ease-out delay-300 ${
+                analysesVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               <Card className="rounded-[24px] border bg-card p-5 md:p-6 shadow-sm">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-5">
                   <div className={isArabic ? "text-right" : "text-left"}>
@@ -429,7 +536,10 @@ const Dashboard = () => {
                       </p>
                       <h2 className="text-4xl font-bold">
                         {latestPrediction
-                          ? `${latestPrediction.probability.toFixed(2)}%`
+                          ? `${formatNumber(latestPrediction.probability, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}%`
                           : "--"}
                       </h2>
                       <div className="mt-3">
@@ -443,13 +553,15 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    <div className={isArabic ? "md:text-left" : "md:text-right"}>
+                    <div
+                      className={isArabic ? "md:text-left" : "md:text-right"}
+                    >
                       <p className="text-sm text-muted-foreground mb-2">
                         {t("dashboard.progress")}
                       </p>
                       <p className="text-xl font-semibold text-primary">
-                        {filteredPredictions.length} {t("dashboard.outOf")}{" "}
-                        {completionTarget}
+                        {formatNumber(filteredPredictions.length)}{" "}
+                        {t("dashboard.outOf")} {formatNumber(completionTarget)}
                       </p>
                     </div>
                   </div>
@@ -463,7 +575,7 @@ const Dashboard = () => {
                           {t("dashboard.pregnancies")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.pregnancies ?? "--"}
+                          {formatValue(latestPrediction?.pregnancies)}
                         </p>
                       </div>
 
@@ -472,7 +584,7 @@ const Dashboard = () => {
                           {t("dashboard.glucose")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.glucose ?? "--"}
+                          {formatValue(latestPrediction?.glucose)}
                         </p>
                       </div>
 
@@ -481,7 +593,7 @@ const Dashboard = () => {
                           {t("dashboard.bloodPressure")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.blood_pressure ?? "--"}
+                          {formatValue(latestPrediction?.blood_pressure)}
                         </p>
                       </div>
 
@@ -490,7 +602,7 @@ const Dashboard = () => {
                           {t("dashboard.skinThickness")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.skin_thickness ?? "--"}
+                          {formatValue(latestPrediction?.skin_thickness)}
                         </p>
                       </div>
 
@@ -499,7 +611,7 @@ const Dashboard = () => {
                           {t("dashboard.insulin")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.insulin ?? "--"}
+                          {formatValue(latestPrediction?.insulin)}
                         </p>
                       </div>
 
@@ -508,7 +620,10 @@ const Dashboard = () => {
                           {t("dashboard.bmi")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.bmi ?? "--"}
+                          {formatValue(latestPrediction?.bmi, {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2,
+                          })}
                         </p>
                       </div>
 
@@ -517,7 +632,13 @@ const Dashboard = () => {
                           {t("dashboard.diabetesPedigree")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.diabetes_pedigree_function ?? "--"}
+                          {formatValue(
+                            latestPrediction?.diabetes_pedigree_function,
+                            {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2,
+                            }
+                          )}
                         </p>
                       </div>
 
@@ -526,7 +647,7 @@ const Dashboard = () => {
                           {t("dashboard.age")}
                         </p>
                         <p className="font-semibold">
-                          {latestPrediction?.age ?? "--"}
+                          {formatValue(latestPrediction?.age)}
                         </p>
                       </div>
                     </div>
@@ -615,7 +736,11 @@ const Dashboard = () => {
                             <div className="flex flex-wrap items-center gap-2 mb-1">
                               <p className="font-semibold truncate">
                                 {t("dashboard.infectionProbability")}:{" "}
-                                {pred.probability.toFixed(2)}%
+                                {formatNumber(pred.probability, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                                %
                               </p>
                               <span
                                 className={`inline-flex rounded-full border px-2 py-1 text-[11px] font-medium ${badgeClass}`}
@@ -629,7 +754,7 @@ const Dashboard = () => {
                           </div>
 
                           <div className="text-sm font-medium">
-                            {pred.glucose}
+                            {formatNumber(pred.glucose)}
                           </div>
 
                           <div className="text-sm text-muted-foreground">
@@ -672,7 +797,14 @@ const Dashboard = () => {
               </Card>
             </section>
 
-            <section className="grid grid-cols-1 gap-5 items-start">
+            <section
+              ref={doctorRef}
+              className={`grid grid-cols-1 gap-5 items-start transition-all duration-700 ease-out delay-[400ms] ${
+                doctorVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               <Card className="rounded-[24px] border bg-card p-5 shadow-sm">
                 <div className="mb-5">
                   <h3 className="font-bold text-xl">

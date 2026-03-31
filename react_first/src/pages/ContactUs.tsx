@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import {
   MailOpen,
   PhoneCall,
@@ -16,10 +16,21 @@ import { toast } from "sonner";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { useTranslation } from "react-i18next";
+import { useIsVisible } from "@/hooks/useIsVisible";
 
 const ContactUs = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language.startsWith("ar");
+
+  const heroRef = useRef(null);
+  const infoRef = useRef(null);
+  const formRef = useRef(null);
+  const emergencyRef = useRef(null);
+
+  const heroVisible = useIsVisible(heroRef);
+  const infoVisible = useIsVisible(infoRef);
+  const formVisible = useIsVisible(formRef);
+  const emergencyVisible = useIsVisible(emergencyRef);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -162,7 +173,14 @@ const ContactUs = () => {
 
       <main className="flex-1 py-12 px-4">
         <div className="container mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
+          <div
+            ref={heroRef}
+            className={`mb-10 text-center transition-all duration-700 ease-out ${
+              heroVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
             <p className="mb-2 text-[11px] uppercase tracking-[0.32em] text-muted-foreground">
               {isArabic ? "تواصل" : "Contact"}
             </p>
@@ -183,7 +201,14 @@ const ContactUs = () => {
           </div>
 
           <div className="space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div
+              ref={infoRef}
+              className={`grid gap-4 sm:grid-cols-2 transition-all duration-700 ease-out delay-100 ${
+                infoVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               {contactInfo.map((info) => (
                 <Card
                   key={info.title}
@@ -248,15 +273,47 @@ const ContactUs = () => {
               </Card>
             </div>
 
-            <Card className="rounded-none border border-border/70 bg-card shadow-sm">
-              <CardContent className="p-5 md:p-6">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
+            <div
+              ref={formRef}
+              className={`transition-all duration-700 ease-out delay-200 ${
+                formVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
+              <Card className="rounded-none border border-border/70 bg-card shadow-sm">
+                <CardContent className="p-5 md:p-6">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Input
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder={t("contactPage.namePlaceholder")}
+                        disabled={isLoading}
+                        className={`h-11 rounded-none border-border/80 bg-background shadow-none ${
+                          isArabic ? "text-right" : "text-left"
+                        }`}
+                        dir={isArabic ? "rtl" : "ltr"}
+                      />
+
+                      <Input
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder={t("contactPage.emailPlaceholder")}
+                        disabled={isLoading}
+                        className="h-11 rounded-none border-border/80 bg-background shadow-none text-left"
+                        dir="ltr"
+                      />
+                    </div>
+
                     <Input
-                      name="name"
-                      value={formData.name}
+                      name="subject"
+                      value={formData.subject}
                       onChange={handleChange}
-                      placeholder={t("contactPage.namePlaceholder")}
+                      placeholder={t("contactPage.subjectPlaceholder")}
                       disabled={isLoading}
                       className={`h-11 rounded-none border-border/80 bg-background shadow-none ${
                         isArabic ? "text-right" : "text-left"
@@ -264,79 +321,63 @@ const ContactUs = () => {
                       dir={isArabic ? "rtl" : "ltr"}
                     />
 
-                    <Input
-                      name="email"
-                      type="email"
-                      value={formData.email}
+                    <Textarea
+                      name="message"
+                      value={formData.message}
                       onChange={handleChange}
-                      placeholder={t("contactPage.emailPlaceholder")}
+                      placeholder={t("contactPage.messagePlaceholder")}
+                      className={`min-h-[160px] resize-none rounded-none border-border/80 bg-background shadow-none text-sm leading-6 ${
+                        isArabic ? "text-right" : "text-left"
+                      }`}
+                      dir={isArabic ? "rtl" : "ltr"}
                       disabled={isLoading}
-                      className="h-11 rounded-none border-border/80 bg-background shadow-none text-left"
-                      dir="ltr"
                     />
-                  </div>
 
-                  <Input
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    placeholder={t("contactPage.subjectPlaceholder")}
-                    disabled={isLoading}
-                    className={`h-11 rounded-none border-border/80 bg-background shadow-none ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                    dir={isArabic ? "rtl" : "ltr"}
-                  />
+                    <div className="flex flex-col items-center gap-3 pt-1">
+                      <Button
+                        type="submit"
+                        className="min-w-[170px] h-11 rounded-full px-8"
+                        disabled={isLoading || !isFormValid}
+                        size="lg"
+                      >
+                        {isLoading ? (
+                          <>
+                            <LoaderCircle
+                              className={`h-4 w-4 animate-spin ${
+                                isArabic ? "ml-2" : "mr-2"
+                              }`}
+                              strokeWidth={2.4}
+                            />
+                            {t("contactPage.sending")}
+                          </>
+                        ) : (
+                          <>
+                            <SendHorizonal
+                              className={`h-4 w-4 ${isArabic ? "ml-2" : "mr-2"}`}
+                              strokeWidth={2.4}
+                            />
+                            {t("contactPage.sendMessage")}
+                          </>
+                        )}
+                      </Button>
 
-                  <Textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    placeholder={t("contactPage.messagePlaceholder")}
-                    className={`min-h-[160px] resize-none rounded-none border-border/80 bg-background shadow-none text-sm leading-6 ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                    dir={isArabic ? "rtl" : "ltr"}
-                    disabled={isLoading}
-                  />
+                      <p className="text-xs text-muted-foreground text-center">
+                        {t("contactPage.replyTime")}
+                      </p>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
 
-                  <div className="flex flex-col items-center gap-3 pt-1">
-                    <Button
-                      type="submit"
-                      className="min-w-[170px] h-11 rounded-full px-8"
-                      disabled={isLoading || !isFormValid}
-                      size="lg"
-                    >
-                      {isLoading ? (
-                        <>
-                          <LoaderCircle
-                            className={`h-4 w-4 animate-spin ${
-                              isArabic ? "ml-2" : "mr-2"
-                            }`}
-                            strokeWidth={2.4}
-                          />
-                          {t("contactPage.sending")}
-                        </>
-                      ) : (
-                        <>
-                          <SendHorizonal
-                            className={`h-4 w-4 ${isArabic ? "ml-2" : "mr-2"}`}
-                            strokeWidth={2.4}
-                          />
-                          {t("contactPage.sendMessage")}
-                        </>
-                      )}
-                    </Button>
-
-                    <p className="text-xs text-muted-foreground text-center">
-                      {t("contactPage.replyTime")}
-                    </p>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-
-            <div className="py-2">
+            <div
+              ref={emergencyRef}
+              className={`py-2 transition-all duration-700 ease-out delay-300 ${
+                emergencyVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               <div className="flex flex-col items-center justify-center text-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-100 text-red-600 flex-shrink-0">
                   <TriangleAlert className="h-5 w-5" strokeWidth={2.2} />
@@ -357,22 +398,6 @@ const ContactUs = () => {
                   </a>
                 </div>
               </div>
-            </div>
-
-            <div className="mt-1" id="location">
-              <Card className="rounded-none border border-border/70 bg-card shadow-sm overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="h-[320px] md:h-[400px] w-full">
-                    <iframe
-                      title="HealthAI location"
-                      src="https://www.google.com/maps?q=Egypt&output=embed"
-                      className="h-full w-full border-0"
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

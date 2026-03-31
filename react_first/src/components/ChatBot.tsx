@@ -1,16 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  MessageCircle,
-  Send,
-  Loader2,
-  X,
-  Minus,
-  AlertTriangle,
-} from "lucide-react";
+import { Send, Loader2, X, Minus } from "lucide-react";
+import Lottie from "lottie-react";
+import chatbot from "@/assets/chatbot.json";
 import { useAuth } from "@/hooks/useAuth";
 import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
@@ -30,9 +25,19 @@ const ChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [predictionId, setPredictionId] = useState<number | null>(null);
+  const [showHint, setShowHint] = useState(true);
+  const [hideHintPermanently, setHideHintPermanently] = useState(false);
+  const [displayedHint, setDisplayedHint] = useState("");
+  const [currentHintIndex, setCurrentHintIndex] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const welcomeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
+
+  const hintMessages = useMemo(
+    () => [t("chatBot.floatingMessage1"), t("chatBot.floatingMessage2")],
+    [t, i18n.language]
+  );
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -46,24 +51,103 @@ const ChatBot = () => {
     }
   }, [isChatOpen, messages.length]);
 
+  useEffect(() => {
+    return () => {
+      if (welcomeTimeoutRef.current) {
+        clearTimeout(welcomeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isChatOpen || hideHintPermanently || hintMessages.length === 0) {
+      setShowHint(false);
+      setDisplayedHint("");
+      return;
+    }
+
+    let typingInterval: ReturnType<typeof setInterval> | undefined;
+    let deletingInterval: ReturnType<typeof setInterval> | undefined;
+    let holdTimeout: ReturnType<typeof setTimeout> | undefined;
+    let hideTimeout: ReturnType<typeof setTimeout> | undefined;
+    let nextMessageTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    const fullText = hintMessages[currentHintIndex] || "";
+    let charIndex = 0;
+
+    setShowHint(true);
+    setDisplayedHint("");
+
+    typingInterval = setInterval(() => {
+      charIndex += 1;
+      setDisplayedHint(fullText.slice(0, charIndex));
+
+      if (charIndex >= fullText.length) {
+        if (typingInterval) clearInterval(typingInterval);
+
+        holdTimeout = setTimeout(() => {
+          deletingInterval = setInterval(() => {
+            charIndex -= 1;
+            setDisplayedHint(fullText.slice(0, charIndex));
+
+            if (charIndex <= 0) {
+              if (deletingInterval) clearInterval(deletingInterval);
+
+              hideTimeout = setTimeout(() => {
+                setShowHint(false);
+
+                nextMessageTimeout = setTimeout(() => {
+                  setCurrentHintIndex((prev) => (prev + 1) % hintMessages.length);
+                  setShowHint(true);
+                }, 700);
+              }, 150);
+            }
+          }, 25);
+        }, 1400);
+      }
+    }, 45);
+
+    return () => {
+      if (typingInterval) clearInterval(typingInterval);
+      if (deletingInterval) clearInterval(deletingInterval);
+      if (holdTimeout) clearTimeout(holdTimeout);
+      if (hideTimeout) clearTimeout(hideTimeout);
+      if (nextMessageTimeout) clearTimeout(nextMessageTimeout);
+    };
+  }, [isChatOpen, hideHintPermanently, currentHintIndex, hintMessages]);
+
+  const showProfessionalWelcomeSequence = () => {
+    if (welcomeTimeoutRef.current) {
+      clearTimeout(welcomeTimeoutRef.current);
+    }
+
+    setMessages([
+      {
+        role: "assistant",
+        content: t("chatBot.welcomeInitial"),
+      },
+    ]);
+
+    welcomeTimeoutRef.current = setTimeout(() => {
+      setMessages([
+        {
+          role: "assistant",
+          content: t("chatBot.welcomeFollowUp"),
+        },
+      ]);
+    }, 2200);
+  };
+
   const loadLastPrediction = async () => {
     try {
       const storedPredictions = localStorage.getItem("predictions");
+
       if (storedPredictions) {
         const predictions = JSON.parse(storedPredictions);
         if (predictions.length > 0) {
           const lastPred = predictions[0];
           setPredictionId(lastPred.id);
-
-          setMessages([
-            {
-              role: "assistant",
-              content: t("chatBot.welcomeWithPrediction", {
-                probability: lastPred.probability.toFixed(1),
-                riskLevel: lastPred.risk_level,
-              }),
-            },
-          ]);
+          showProfessionalWelcomeSequence();
           return;
         }
       }
@@ -78,15 +162,7 @@ const ChatBot = () => {
           if (data.predictions && data.predictions.length > 0) {
             const lastPred = data.predictions[0];
             setPredictionId(lastPred.id);
-            setMessages([
-              {
-                role: "assistant",
-                content: t("chatBot.welcomeWithPrediction", {
-                  probability: lastPred.probability.toFixed(1),
-                  riskLevel: lastPred.risk_level,
-                }),
-              },
-            ]);
+            showProfessionalWelcomeSequence();
             return;
           }
         } catch (err) {
@@ -94,20 +170,10 @@ const ChatBot = () => {
         }
       }
 
-      setMessages([
-        {
-          role: "assistant",
-          content: t("chatBot.welcomeDefault"),
-        },
-      ]);
+      showProfessionalWelcomeSequence();
     } catch (error) {
       console.error("Error loading prediction:", error);
-      setMessages([
-        {
-          role: "assistant",
-          content: t("chatBot.welcomeFallback"),
-        },
-      ]);
+      showProfessionalWelcomeSequence();
     }
   };
 
@@ -151,25 +217,12 @@ const ChatBot = () => {
     } catch (error: any) {
       console.error("Chat error:", error);
 
-      const fallbackResponses: Record<string, string> =
-        i18n.language === "ar"
-          ? {
-              ليه: "النسبة بتتعتمد على عوامل كتير زي الجلوكوز، BMI، العمر، والعامل الوراثي.",
-              ازاي:
-                "من خلال تحليل البيانات الطبية بتاعتك ومقارنتها بآلاف الحالات المشابهة.",
-              خطير:
-                "مستوى الخطر بيتحدد بناءً على النسبة. لو النسبة فوق 50% ينصح بمراجعة طبيب.",
-              علاج:
-                "الخطوات الأساسية: نظام غذائي صحي، رياضة منتظمة، ومتابعة مع طبيب.",
-            }
-          : {
-              why: "The percentage depends on several factors such as glucose, BMI, age, and family history.",
-              how: "It works by analyzing your medical data and comparing it with thousands of similar cases.",
-              serious:
-                "Risk level is determined based on the percentage. If it is above 50%, it is recommended to consult a doctor.",
-              treatment:
-                "The main steps are a healthy diet, regular exercise, and follow-up with a doctor.",
-            };
+      const fallbackResponses: Record<string, string> = {
+        why: t("chatBot.fallbackResponses.why"),
+        how: t("chatBot.fallbackResponses.how"),
+        serious: t("chatBot.fallbackResponses.serious"),
+        treatment: t("chatBot.fallbackResponses.treatment"),
+      };
 
       let fallback = t("chatBot.fallbackError");
 
@@ -184,7 +237,7 @@ const ChatBot = () => {
         ...prev,
         {
           role: "assistant",
-          content: fallback + " " + t("chatBot.temporarilyDisabled"),
+          content: `${fallback} ${t("chatBot.temporarilyDisabled")}`,
         },
       ]);
 
@@ -204,38 +257,125 @@ const ChatBot = () => {
   const handleCloseChat = () => {
     setIsChatOpen(false);
     setIsMinimized(false);
+    setMessages([]);
+    setInputMessage("");
+    setConversationId(null);
+    setPredictionId(null);
+    setIsLoading(false);
+
+    if (welcomeTimeoutRef.current) {
+      clearTimeout(welcomeTimeoutRef.current);
+    }
   };
 
   return (
     <>
+      <style>
+        {`
+          @keyframes chatbot-float {
+            0%, 100% {
+              transform: translateY(0);
+            }
+            50% {
+              transform: translateY(-8px);
+            }
+          }
+
+          @keyframes hint-fade {
+            0% {
+              opacity: 0;
+              transform: translateY(6px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .chatbot-float {
+            animation: chatbot-float 2.6s ease-in-out infinite;
+          }
+
+          .chatbot-hint {
+            animation: hint-fade 0.3s ease;
+          }
+        `}
+      </style>
+
       {!isChatOpen && (
-        <button
-          onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-6 right-6 z-[999] h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-all duration-200"
-          aria-label={t("chatBot.openAriaLabel")}
-        >
-          <MessageCircle className="h-6 w-6" />
-        </button>
+        <div className="fixed bottom-4 right-3 sm:bottom-5 sm:right-5 z-[999]">
+          <div className="relative w-[170px] sm:w-[210px] h-[170px] sm:h-[210px]">
+            {showHint && (
+              <div
+                dir={i18n.language === "ar" ? "rtl" : "ltr"}
+                className="chatbot-hint z-20 pointer-events-auto absolute top-[6px] right-[105px] sm:top-[10px] sm:right-[132px] w-[170px] sm:w-[195px] rounded-2xl border bg-background px-3 py-2 shadow-xl"
+              >
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowHint(false);
+                    setHideHintPermanently(true);
+                  }}
+                  className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted"
+                  aria-label={t("chatBot.closeHintAriaLabel")}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+
+                <p className="pr-4 text-[12px] sm:text-sm font-medium leading-5 text-foreground min-h-[20px]">
+                  {displayedHint}
+                  <span className="ms-1 inline-block h-4 w-[1px] align-middle bg-current animate-pulse" />
+                </p>
+
+                <span className="absolute bottom-3 -right-1.5 h-3 w-3 rotate-45 border-r border-b bg-background" />
+              </div>
+            )}
+
+            <button
+              onClick={() => setIsChatOpen(true)}
+              className="z-10 absolute bottom-0 right-0 flex items-center justify-center border-0 bg-transparent p-0 shadow-none transition-all duration-200 hover:scale-105 chatbot-float"
+              aria-label={t("chatBot.openAriaLabel")}
+              type="button"
+            >
+              <Lottie
+                animationData={chatbot}
+                loop
+                className="pointer-events-none h-[170px] w-[170px] sm:h-[210px] sm:w-[210px]"
+              />
+            </button>
+          </div>
+        </div>
       )}
 
       {isChatOpen && (
         <div
           dir={i18n.language === "ar" ? "rtl" : "ltr"}
-          className={`fixed bottom-6 right-6 z-[999] w-[calc(100vw-2rem)] sm:w-[500px] bg-background border rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 flex flex-col ${
-            isMinimized ? "h-[76px]" : "h-[620px]"
+          className={`fixed bottom-5 right-5 z-[999] w-[calc(100vw-1.5rem)] sm:w-[430px] md:w-[470px] bg-background/95 backdrop-blur-xl border border-border/60 rounded-[30px] shadow-[0_20px_60px_rgba(0,0,0,0.18)] overflow-hidden transition-all duration-300 flex flex-col ${
+            isMinimized ? "h-[84px]" : "h-[640px]"
           }`}
         >
-          <div className="px-6 py-4 border-b bg-background shrink-0">
+          <div className="px-5 py-4 border-b border-border/50 bg-gradient-to-b from-background to-background/90 shrink-0">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                  <MessageCircle className="h-5 w-5 text-primary" />
+                <div className="h-16 w-16 rounded-full overflow-hidden bg-transparent shrink-0">
+                  <Lottie
+                    animationData={chatbot}
+                    loop
+                    className="h-16 w-16 pointer-events-none"
+                  />
                 </div>
+
                 <div className="min-w-0">
-                  <h3 className="text-lg font-semibold truncate">
+                  <h3 className="text-base sm:text-lg font-semibold truncate">
                     {t("chatBot.title")}
                   </h3>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
                     {predictionId
                       ? t("chatBot.connectedToLastPrediction")
                       : t("chatBot.generalMode")}
@@ -246,16 +386,18 @@ const ChatBot = () => {
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => setIsMinimized((prev) => !prev)}
-                  className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-muted transition"
+                  className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted transition"
                   aria-label={t("chatBot.minimizeAriaLabel")}
+                  type="button"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
 
                 <button
                   onClick={handleCloseChat}
-                  className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-muted transition"
+                  className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted transition"
                   aria-label={t("chatBot.closeAriaLabel")}
+                  type="button"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -265,8 +407,8 @@ const ChatBot = () => {
 
           {!isMinimized && (
             <>
-              <ScrollArea className="flex-1 px-6 py-4 min-h-0">
-                <div className="space-y-4">
+              <ScrollArea className="flex-1 min-h-0 bg-gradient-to-b from-background via-background to-muted/20">
+                <div className="px-4 sm:px-5 py-5 space-y-4">
                   {messages.map((msg, index) => (
                     <div
                       key={index}
@@ -275,17 +417,18 @@ const ChatBot = () => {
                       }`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                        className={`max-w-[84%] px-4 py-3 shadow-sm ${
                           msg.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-accent text-accent-foreground"
+                            ? "bg-primary text-primary-foreground rounded-[26px] rounded-br-md"
+                            : "bg-accent text-accent-foreground rounded-[26px] rounded-bl-md"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">
+                        <p className="text-sm leading-6 whitespace-pre-wrap">
                           {msg.content}
                         </p>
+
                         {msg.timestamp && (
-                          <p className="text-xs opacity-60 mt-1">
+                          <p className="text-[11px] opacity-60 mt-2">
                             {new Date(msg.timestamp).toLocaleTimeString(
                               i18n.language === "ar" ? "ar-EG" : "en-US",
                               {
@@ -301,7 +444,7 @@ const ChatBot = () => {
 
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-accent rounded-2xl px-4 py-3">
+                      <div className="bg-accent text-accent-foreground rounded-[26px] rounded-bl-md px-4 py-3 shadow-sm">
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span className="text-sm text-muted-foreground">
@@ -316,21 +459,25 @@ const ChatBot = () => {
                 </div>
               </ScrollArea>
 
-              <div className="px-6 py-4 border-t shrink-0">
-                <div className="flex gap-2">
-                  <Input
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyDown={handleKeyPress}
-                    placeholder={t("chatBot.inputPlaceholder")}
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
+              <div className="px-4 sm:px-5 py-4 border-t border-border/50 bg-background/95 shrink-0">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1 rounded-full border border-border/70 bg-background shadow-sm px-2 py-2">
+                    <Input
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      placeholder={t("chatBot.inputPlaceholder")}
+                      disabled={isLoading}
+                      className="border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 h-10 px-3"
+                    />
+                  </div>
+
                   <Button
                     onClick={handleSendMessage}
                     disabled={isLoading || !inputMessage.trim()}
                     size="icon"
                     aria-label={t("chatBot.sendAriaLabel")}
+                    className="h-12 w-12 rounded-full shadow-sm shrink-0"
                   >
                     {isLoading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -338,13 +485,6 @@ const ChatBot = () => {
                       <Send className="h-5 w-5" />
                     )}
                   </Button>
-                </div>
-
-                <div className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-[4px] px-2">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-yellow-500" />
-                  <span className="leading-tight break-words">
-                    {t("chatBot.disclaimer")}
-                  </span>
                 </div>
               </div>
             </>

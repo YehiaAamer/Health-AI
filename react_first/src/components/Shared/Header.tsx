@@ -1,16 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, User, Settings, LogOut, Globe } from "lucide-react";
+import { Bell, User, Settings, LogOut, Globe, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const Activity = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-  >
+  <svg className={className} viewBox="0 0 24 24" fill="none">
     <path
       d="M3 12h4l3-9 4 18 3-9h4"
       stroke="currentColor"
@@ -31,6 +27,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   const navigate = useNavigate();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isArabic = i18n.language.startsWith("ar");
 
@@ -47,8 +44,23 @@ const Header = ({ variant = "default" }: HeaderProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileNavOpen(false);
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
   const handleLogout = async () => {
     setMenuOpen(false);
+    setMobileNavOpen(false);
     try {
       await logout();
     } finally {
@@ -60,6 +72,110 @@ const Header = ({ variant = "default" }: HeaderProps) => {
     const newLang = isArabic ? "en" : "ar";
     await i18n.changeLanguage(newLang);
     setMenuOpen(false);
+  };
+
+  const closeMobileNav = () => setMobileNavOpen(false);
+
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    [
+      "relative transition-colors duration-200",
+      "after:absolute after:start-0 after:-bottom-1.5 after:h-[2px] after:rounded-full after:bg-primary after:transition-all after:duration-200",
+      isActive
+        ? "text-primary font-medium after:w-full"
+        : "text-foreground/80 hover:text-foreground after:w-0 hover:after:w-full",
+    ].join(" ");
+
+  const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+    [
+      "block rounded-xl px-4 py-3 text-sm transition-colors duration-200",
+      isActive
+        ? "bg-primary/10 text-primary font-medium"
+        : "text-foreground hover:bg-accent",
+      isArabic ? "text-right" : "text-left",
+    ].join(" ");
+
+  const renderMainLinks = (mobile = false) => {
+    const cls = mobile ? mobileNavLinkClass : navLinkClass;
+
+    if (variant === "auth") {
+      return (
+        <NavLink
+          to="/home"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
+          {t("home")}
+        </NavLink>
+      );
+    }
+
+    if (user) {
+      return (
+        <>
+          <NavLink
+            to="/home"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("home")}
+          </NavLink>
+          <NavLink
+            to="/dashboard"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("dashboard.title")}
+          </NavLink>
+          <NavLink
+            to="/past-reports"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("reports")}
+          </NavLink>
+          <NavLink
+            to="/consultations"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("consultations")}
+          </NavLink>
+          <NavLink
+            to="/help"
+            className={cls}
+            onClick={mobile ? closeMobileNav : undefined}
+          >
+            {t("helpNav")}
+          </NavLink>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <NavLink
+          to="/home"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
+          {t("home")}
+        </NavLink>
+        <NavLink
+          to="/help"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
+          {t("helpNav")}
+        </NavLink>
+        <NavLink
+          to="/contact"
+          className={cls}
+          onClick={mobile ? closeMobileNav : undefined}
+        >
+          {t("contact")}
+        </NavLink>
+      </>
+    );
   };
 
   const renderUserMenu = () => (
@@ -82,10 +198,11 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
       {menuOpen && (
         <div
-          className="absolute top-full right-0 mt-2 w-56 min-w-[14rem] rounded-xl border bg-background shadow-lg z-50 overflow-hidden origin-top-right"
+          className={`absolute top-full mt-2 w-56 min-w-[14rem] rounded-xl border bg-background shadow-lg z-50 overflow-hidden ${
+            isArabic ? "left-0 origin-top-left" : "right-0 origin-top-right"
+          }`}
           dir={isArabic ? "rtl" : "ltr"}
         >
-          {/* User Info */}
           <div
             className={`px-4 py-3 border-b ${
               isArabic ? "text-right" : "text-left"
@@ -101,7 +218,6 @@ const Header = ({ variant = "default" }: HeaderProps) => {
             </p>
           </div>
 
-          {/* Settings */}
           <button
             onClick={() => {
               setMenuOpen(false);
@@ -115,7 +231,6 @@ const Header = ({ variant = "default" }: HeaderProps) => {
             {t("settings")}
           </button>
 
-          {/* Language */}
           <button
             onClick={handleToggleLanguage}
             className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
@@ -126,7 +241,6 @@ const Header = ({ variant = "default" }: HeaderProps) => {
             {isArabic ? "English" : "العربية"}
           </button>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
             className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-accent ${
@@ -142,69 +256,122 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   );
 
   return (
-    <header className="w-full border-b bg-background">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center gap-4" dir="ltr">
-          
-          {/* Logo */}
-          <Link to="/home" className="flex items-center gap-2">
-            <Activity className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">HealthAI</span>
-          </Link>
+    <>
+      <header
+        className="w-full border-b bg-background"
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
+            {/* Logo */}
+            <div className="min-w-0 md:justify-self-start">
+              <Link to="/home" className="flex items-center gap-2 w-fit">
+                <Activity className="h-8 w-8 text-primary shrink-0" />
+                <span className="text-xl font-bold">HealthAI</span>
+              </Link>
+            </div>
 
-          {/* NAVBAR */}
-          <nav className="hidden md:flex flex-1 justify-center gap-6">
-            {variant === "auth" ? (
-              <Link to="/home">{t("home")}</Link>
-            ) : user ? (
-              <>
-                <Link to="/home">{t("home")}</Link>
-                <Link to="/dashboard">{t("dashboard.title")}</Link>
-                <Link to="/past-reports">{t("reports")}</Link>
-                <Link to="/consultations">{t("consultations")}</Link>
-                <Link to="/help">{t("helpNav")}</Link>
-              </>
-            ) : (
-              <>
-                <Link to="/home">{t("home")}</Link>
-                <Link to="/help">{t("helpNav")}</Link>
-                <Link to="/contact">{t("contact")}</Link>
-              </>
-            )}
-          </nav>
+            {/* Desktop NAVBAR */}
+            <nav
+              className={`hidden md:flex items-center justify-center gap-6 md:justify-self-center ${
+                isArabic ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              {renderMainLinks(false)}
+            </nav>
 
-          {/* RIGHT SIDE */}
-          <div className="flex items-center gap-2 ms-auto">
-            
-            <Button variant="ghost" size="icon" onClick={handleToggleLanguage}>
-              <Globe className="h-5 w-5" />
-            </Button>
+            {/* Right Side */}
+            <div className="flex items-center gap-2 shrink-0 md:justify-self-end">
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open navigation menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
 
-            {user ? (
-              <>
-                {/* 🔔 النوتيفيكيشن ثابتة هنا */}
-                <Button variant="ghost" size="icon">
-                  <Bell className="h-5 w-5" />
-                </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleLanguage}
+              >
+                <Globe className="h-5 w-5" />
+              </Button>
 
-                {renderUserMenu()}
-              </>
-            ) : (
-              !isLoading && (
+              {user ? (
                 <>
-                  <Link to="/login">
-                    <Button variant="ghost">{t("login")}</Button>
-                  </Link>
-                  <Link to="/signup">
-                    <Button>{t("getStarted")}</Button>
-                  </Link>
+                  <Button variant="ghost" size="icon">
+                    <Bell className="h-5 w-5" />
+                  </Button>
+                  {renderUserMenu()}
                 </>
-              )
-            )}
+              ) : (
+                !isLoading && (
+                  <div className="hidden md:flex items-center gap-2">
+                    <Link to="/login">
+                      <Button variant="ghost">{t("login")}</Button>
+                    </Link>
+                    <Link to="/signup">
+                      <Button>{t("getStarted")}</Button>
+                    </Link>
+                  </div>
+                )
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobile Side Drawer */}
+      {mobileNavOpen && (
+        <div className="md:hidden fixed inset-0 z-[100]">
+          <div className="absolute inset-0 bg-black/40" onClick={closeMobileNav} />
+
+          <div
+            dir={isArabic ? "rtl" : "ltr"}
+            className={`absolute top-0 h-full w-[280px] bg-background shadow-2xl border-l border-r transition-all duration-300 ${
+              isArabic ? "left-0" : "right-0"
+            }`}
+          >
+            <div className="flex items-center justify-between px-4 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <Activity className="h-7 w-7 text-primary" />
+                <span className="text-lg font-bold">HealthAI</span>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeMobileNav}
+                aria-label="Close navigation menu"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="px-3 py-4 space-y-2">
+              {renderMainLinks(true)}
+
+              {!user && !isLoading && (
+                <div className="pt-3 space-y-2">
+                  <Link to="/login" onClick={closeMobileNav}>
+                    <Button variant="ghost" className="w-full">
+                      {t("login")}
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={closeMobileNav}>
+                    <Button className="w-full">{t("getStarted")}</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

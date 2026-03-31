@@ -1,5 +1,5 @@
 // src/pages/PastReports.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { apiCall, API_ENDPOINTS } from "@/lib/api";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { useTranslation } from "react-i18next";
+import { useIsVisible } from "@/hooks/useIsVisible";
 
 interface Prediction {
   id: number;
@@ -33,6 +34,9 @@ export default function PastReports() {
   const { user, isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
+
+  const heroRef = useRef(null);
+  const heroVisible = useIsVisible(heroRef);
 
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +73,20 @@ export default function PastReports() {
       fetchPredictions();
     }
   }, [isAuthenticated, user, t]);
+
+  const formatNumber = (
+    value: number,
+    options?: Intl.NumberFormatOptions
+  ) => {
+    return value.toLocaleString(isArabic ? "ar-EG" : "en-US", options);
+  };
+
+  const formatValue = (
+    value?: number | null,
+    options?: Intl.NumberFormatOptions
+  ) => {
+    return value != null ? formatNumber(value, options) : "--";
+  };
 
   const normalizeRiskLevel = (riskLevel?: string) => {
     const risk = String(riskLevel || "").trim().toLowerCase();
@@ -147,6 +165,15 @@ export default function PastReports() {
     );
   }, [predictions]);
 
+  const averageProbability = useMemo(() => {
+    if (!sortedPredictions.length) return 0;
+
+    return (
+      sortedPredictions.reduce((sum, p) => sum + p.probability, 0) /
+      sortedPredictions.length
+    );
+  }, [sortedPredictions]);
+
   if (!isAuthenticated) {
     return (
       <div
@@ -177,7 +204,14 @@ export default function PastReports() {
       <main className="flex-1">
         <section className="border-b bg-background">
           <div className="container mx-auto px-4 py-8 md:py-10">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div
+              ref={heroRef}
+              className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between transition-all duration-700 ease-out ${
+                heroVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               <div className={isArabic ? "text-right" : "text-left"}>
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
                   {t("pastReportsPage.title")}
@@ -186,12 +220,6 @@ export default function PastReports() {
                   {t("pastReportsPage.subtitle")}
                 </p>
               </div>
-
-              <Link to="/diagnosis">
-                <Button size="lg" className="min-w-[180px]">
-                  {t("pastReportsPage.newTest")}
-                </Button>
-              </Link>
             </div>
           </div>
         </section>
@@ -226,9 +254,6 @@ export default function PastReports() {
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 {t("pastReportsPage.emptySubtitle")}
               </p>
-              <Link to="/diagnosis">
-                <Button size="lg">{t("pastReportsPage.startAnalysis")}</Button>
-              </Link>
             </Card>
           )}
 
@@ -241,7 +266,7 @@ export default function PastReports() {
                       {t("pastReportsPage.totalReports")}
                     </p>
                     <p className="text-4xl font-bold text-primary">
-                      {sortedPredictions.length}
+                      {formatNumber(sortedPredictions.length)}
                     </p>
                   </div>
                 </Card>
@@ -265,12 +290,10 @@ export default function PastReports() {
                       {t("pastReportsPage.average")}
                     </p>
                     <p className="text-4xl font-bold">
-                      {(
-                        sortedPredictions.reduce(
-                          (sum, p) => sum + p.probability,
-                          0
-                        ) / sortedPredictions.length
-                      ).toFixed(1)}
+                      {formatNumber(averageProbability, {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      })}
                       %
                     </p>
                   </div>
@@ -296,7 +319,11 @@ export default function PastReports() {
                         >
                           <h3 className="text-lg font-bold">
                             {t("pastReportsPage.infectionProbability")}:{" "}
-                            {pred.probability.toFixed(2)}%
+                            {formatNumber(pred.probability, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                            %
                           </h3>
                           <Badge className={getRiskBadgeColor(pred.risk_level)}>
                             {getLocalizedRiskLabel(pred.risk_level)}
@@ -358,27 +385,36 @@ export default function PastReports() {
                         <p className="text-xs text-muted-foreground mb-1">
                           {t("pastReportsPage.pregnancies")}
                         </p>
-                        <p className="font-medium">{pred.pregnancies}</p>
+                        <p className="font-medium">
+                          {formatValue(pred.pregnancies)}
+                        </p>
                       </div>
                       <div className={isArabic ? "text-right" : "text-left"}>
                         <p className="text-xs text-muted-foreground mb-1">
                           {t("pastReportsPage.glucose")}
                         </p>
-                        <p className="font-medium">{pred.glucose} mg/dL</p>
+                        <p className="font-medium">
+                          {formatValue(pred.glucose)} mg/dL
+                        </p>
                       </div>
                       <div className={isArabic ? "text-right" : "text-left"}>
                         <p className="text-xs text-muted-foreground mb-1">
                           {t("pastReportsPage.bloodPressure")}
                         </p>
                         <p className="font-medium">
-                          {pred.blood_pressure} mmHg
+                          {formatValue(pred.blood_pressure)} mmHg
                         </p>
                       </div>
                       <div className={isArabic ? "text-right" : "text-left"}>
                         <p className="text-xs text-muted-foreground mb-1">
                           {t("pastReportsPage.bmi")}
                         </p>
-                        <p className="font-medium">{pred.bmi}</p>
+                        <p className="font-medium">
+                          {formatValue(pred.bmi, {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
                       </div>
                     </div>
 
@@ -388,7 +424,8 @@ export default function PastReports() {
                       }`}
                     >
                       <p className="text-xs text-muted-foreground">
-                        {t("pastReportsPage.reportId")}: #{pred.id}
+                        {t("pastReportsPage.reportId")}: #
+                        {formatNumber(pred.id)}
                       </p>
                     </div>
                   </Card>

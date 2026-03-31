@@ -250,27 +250,39 @@ const en = {
   },
 
   chatBot: {
-    title: "AI Medical Assistant",
-    connectedToLastPrediction: "Connected to your latest analysis",
-    generalMode: "General mode",
-    welcomeWithPrediction:
-      "Hello! I’m your AI medical assistant. I have your latest analysis result ({{probability}}% - {{riskLevel}}). How can I help you?",
-    welcomeDefault:
-      "Hello! I’m your AI medical assistant. Ask me anything about diabetes, analyses, or your general health.",
-    welcomeFallback:
-      "Hello! I’m your AI medical assistant. How can I help you?",
-    typing: "Typing...",
-    inputPlaceholder: "Type your question here...",
-    disclaimer:
-      "This is an AI assistant and does not replace consultation with a medical specialist.",
-    fallbackError:
-      "Sorry, there is currently a technical issue. Please try again later or consult a doctor.",
-    temporarilyDisabled: "(Chatbot is temporarily disabled)",
-    unavailableToast: "Chatbot is currently unavailable",
-    openAriaLabel: "Open chat assistant",
-    minimizeAriaLabel: "Minimize chat",
-    closeAriaLabel: "Close chat",
-    sendAriaLabel: "Send message"
+ title: "AI Medical Assistant",
+  connectedToLastPrediction: "Connected to your latest analysis",
+  generalMode: "General mode",
+
+  welcomeInitial: "Welcome, I’m your smart medical assistant.",
+  welcomeFollowUp:
+    "I can help answer your questions about your general health and diabetes.",
+
+  floatingMessage1: "Welcome, I’m your smart medical assistant.",
+  floatingMessage2:
+    "I can help answer your questions about your general health and diabetes.",
+
+  typing: "Typing...",
+  inputPlaceholder: "Type your question here...",
+  disclaimer:
+    "This is an AI assistant and does not replace consultation with a medical specialist.",
+  fallbackError:
+    "Sorry, there is currently a technical issue. Please try again later or consult a doctor.",
+  temporarilyDisabled: "(Chatbot is temporarily disabled)",
+  unavailableToast: "Chatbot is currently unavailable",
+  openAriaLabel: "Open chat assistant",
+  minimizeAriaLabel: "Minimize chat",
+  closeAriaLabel: "Close chat",
+  closeHintAriaLabel: "Close hint",
+  fallbackResponses: {
+    why: "The percentage depends on several factors such as glucose, BMI, age, and family history.",
+    how: "It works by analyzing your medical data and comparing it with thousands of similar cases.",
+    serious:
+      "Risk level is determined based on the percentage. If it is above 50%, it is recommended to consult a doctor.",
+    treatment:
+      "The main steps are a healthy diet, regular exercise, and follow-up with a doctor."
+  },
+  sendAriaLabel: "Send message"
   },
 
   faqs: "FAQs",
@@ -456,10 +468,10 @@ const en = {
     bloodPressure: "Blood Pressure",
     bmi: "Body Mass Index",
     riskLow: "Low",
-riskMedium: "Medium",
-riskHigh: "High",
-riskVeryHigh: "Very High",
-unknownRisk: "Unknown",
+    riskMedium: "Medium",
+    riskHigh: "High",
+    riskVeryHigh: "Very High",
+    unknownRisk: "Unknown",
     reportId: "Report ID"
   },
 

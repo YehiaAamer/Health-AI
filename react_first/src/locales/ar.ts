@@ -5,7 +5,6 @@ const ar = {
     welcome: "أهلاً بعودتك",
     hello: "يا",
     subtitle: "صحتك، بقوة الذكاء الاصطناعي.",
-
     mainMenu: "القائمة الرئيسية",
     search: "بحث",
     clearSearch: "مسح البحث",
@@ -239,26 +238,38 @@ const ar = {
   },
 
   chatBot: {
-    title: "المساعد الطبي الذكي",
-    connectedToLastPrediction: "متصل بتحليلك الأخير",
-    generalMode: "وضع عام",
-    welcomeWithPrediction:
-      "مرحباً! أنا مساعدك الطبي الذكي. لدي نتيجة تحليلك الأخيرة ({{probability}}% - {{riskLevel}}). كيف يمكنني مساعدتك؟",
-    welcomeDefault:
-      "مرحباً! أنا مساعدك الطبي الذكي. اسألني أي سؤال عن السكري، التحاليل، أو صحتك العامة.",
-    welcomeFallback:
-      "مرحباً! أنا مساعدك الطبي الذكي. كيف يمكنني مساعدتك؟",
-    typing: "جاري الكتابة...",
-    inputPlaceholder: "اكتب سؤالك هنا...",
-    disclaimer: "هذا مساعد ذكي ولا يغني عن استشارة طبيب متخصص",
-    fallbackError:
-      "عذراً، هناك مشكلة تقنية حالياً. يرجى المحاولة لاحقاً أو استشارة طبيب.",
-    temporarilyDisabled: "(Chatbot معطل مؤقتاً)",
-    unavailableToast: "Chatbot غير متاح حالياً",
-    openAriaLabel: "فتح المساعد",
-    minimizeAriaLabel: "تصغير الشات",
-    closeAriaLabel: "إغلاق الشات",
-    sendAriaLabel: "إرسال الرسالة"
+  title: "المساعد الطبي الذكي",
+  connectedToLastPrediction: "متصل بتحليلك الأخير",
+  generalMode: "وضع عام",
+
+  welcomeInitial: "أهلاً بك، أنا مساعدك الطبي الذكي.",
+  welcomeFollowUp:
+    "يمكنني مساعدتك في الإجابة عن استفساراتك المتعلقة بصحتك العامة والسكري.",
+
+  floatingMessage1: "أهلاً بك، أنا مساعدك الطبي الذكي.",
+  floatingMessage2:
+    "يمكنني مساعدتك في الإجابة عن استفساراتك المتعلقة بصحتك العامة والسكري.",
+
+  typing: "جاري الكتابة...",
+  inputPlaceholder: "اكتب سؤالك هنا...",
+  disclaimer: "هذا مساعد ذكي ولا يغني عن استشارة طبيب متخصص",
+  fallbackError:
+    "عذراً، هناك مشكلة تقنية حالياً. يرجى المحاولة لاحقاً أو استشارة طبيب.",
+  temporarilyDisabled: "(Chatbot معطل مؤقتاً)",
+  unavailableToast: "Chatbot غير متاح حالياً",
+  openAriaLabel: "فتح المساعد",
+  minimizeAriaLabel: "تصغير الشات",
+  closeAriaLabel: "إغلاق الشات",
+  closeHintAriaLabel: "إغلاق الرسالة",
+  fallbackResponses: {
+    why: "النسبة بتتعتمد على عوامل كتير زي الجلوكوز، BMI، العمر، والعامل الوراثي.",
+    how: "من خلال تحليل البيانات الطبية بتاعتك ومقارنتها بآلاف الحالات المشابهة.",
+    serious:
+      "مستوى الخطر بيتحدد بناءً على النسبة. لو النسبة فوق 50% ينصح بمراجعة طبيب.",
+    treatment: "الخطوات الأساسية: نظام غذائي صحي، رياضة منتظمة، ومتابعة مع طبيب."
+  },
+  sendAriaLabel: "إرسال الرسالة"
+
   },
 
   faqs: "الأسئلة الشائعة",
