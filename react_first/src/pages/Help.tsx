@@ -12,6 +12,8 @@ import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { useIsVisible } from "@/hooks/useIsVisible";
 
+const DESKTOP_HEADER_HEIGHT = 72;
+
 const Help = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { t, i18n } = useTranslation();
@@ -46,12 +48,17 @@ const Help = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      dir={isArabic ? "rtl" : "ltr"}
+    >
       <Header />
 
-      <main className="flex-1 py-12 px-4 bg-background">
+      <main
+        className="flex-1 px-4 bg-background"
+        style={{ paddingTop: `${DESKTOP_HEADER_HEIGHT + 48}px`, paddingBottom: "48px" }}
+      >
         <div className="container mx-auto max-w-4xl">
-          {/* HERO SECTION */}
           <div
             ref={heroRef}
             className={`text-center mb-12 transition-all duration-700 ease-out ${
@@ -74,12 +81,11 @@ const Help = () => {
                 placeholder={t("help.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={isArabic ? "pr-10 py-6" : "pl-10 py-6"}
+                className={`${isArabic ? "pr-10" : "pl-10"} py-6`}
               />
             </div>
           </div>
 
-          {/* FAQ SECTION */}
           <div
             ref={faqRef}
             className={`mb-16 transition-all duration-700 ease-out delay-100 ${
@@ -104,7 +110,6 @@ const Help = () => {
             </Accordion>
           </div>
 
-          {/* CONTACT SECTION */}
           <div
             ref={contactRef}
             className={`transition-all duration-700 ease-out delay-200 ${
@@ -138,7 +143,6 @@ const Help = () => {
               </div>
             </div>
 
-            {/* Additional Links */}
             <div className="mt-12 pt-8 border-t">
               <h3 className="text-lg font-semibold text-center mb-4">
                 {t("help.importantPages")}

@@ -32,16 +32,12 @@ import {
   HeartPulse,
   FlaskConical,
   Check,
-  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/api";
+import { apiCall, API_ENDPOINTS } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Shared/Header";
 
-// ────────────────────────────────────────────────
-// Schema التحقق (Zod)
-// ────────────────────────────────────────────────
 const formSchema = z.object({
   pregnancies: z.coerce
     .number()
@@ -80,6 +76,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 type StepKey = "basic" | "vitals" | "risk";
 
+const DESKTOP_HEADER_HEIGHT = 72;
+
 export default function DiagnosisWizard() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -111,6 +109,7 @@ export default function DiagnosisWizard() {
     if (activeStep === "basic") {
       return await trigger(["pregnancies", "age"]);
     }
+
     if (activeStep === "vitals") {
       return await trigger([
         "glucose",
@@ -120,9 +119,11 @@ export default function DiagnosisWizard() {
         "bmi",
       ]);
     }
+
     if (activeStep === "risk") {
       return await trigger(["diabetesPedigreeFunction"]);
     }
+
     return false;
   };
 
@@ -144,38 +145,31 @@ export default function DiagnosisWizard() {
       };
 
       console.log("Calling API:", API_ENDPOINTS.PREDICT);
+      console.log("Payload:", backendData);
 
-      const response = await fetch(API_ENDPOINTS.PREDICT, {
+      const result = await apiCall<{
+        probability: number;
+        risk_level: string;
+        message: string;
+        prediction_id?: number;
+      }>(API_ENDPOINTS.PREDICT, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(backendData),
       });
 
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error || "فشل التحليل");
-      }
-
-      const result = await response.json();
       console.log("Result:", result);
 
       toast.success(t("diagnosisWizard.success"));
 
-      setTimeout(() => {
-        navigate("/report", {
-          state: {
-            formData: values,
-            probability: result.probability,
-            riskLevel: result.risk_level,
-            message: result.message,
-            predictionId: result.prediction_id,
-          },
-        });
-      }, 100);
+      navigate("/report", {
+        state: {
+          formData: values,
+          probability: result.probability,
+          riskLevel: result.risk_level,
+          message: result.message,
+          predictionId: result.prediction_id,
+        },
+      });
     } catch (error) {
       console.error("Error:", error);
       toast.error(
@@ -237,73 +231,32 @@ export default function DiagnosisWizard() {
     >
       <Header variant="dashboard" />
 
-      <div className="container max-w-6xl py-10 px-4 mx-auto">
-        <div className="mb-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/home")}
-            className={`gap-2 rounded-xl border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground ${
-              isArabic ? "flex-row-reverse" : ""
-            }`}
-          >
-            {isArabic ? (
-              <ArrowRight className="h-4 w-4" />
-            ) : (
-              <ArrowLeft className="h-4 w-4" />
-            )}
-            {t("diagnosisWizard.backHome")}
-          </Button>
-        </div>
-
-        <div className="mb-8">
-          <div className={`mb-4 ${sectionTitleClass}`}>
-            <h2 className="text-2xl font-bold tracking-tight mb-2">
-              {t("diagnosisWizard.howItWorks")}
-            </h2>
-            <p className="text-muted-foreground leading-7">
-              {t("diagnosisWizard.howItWorksDesc")}
-            </p>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-3">
-            {[
-              t("diagnosisWizard.tip1"),
-              t("diagnosisWizard.tip2"),
-              t("diagnosisWizard.tip3"),
-            ].map((tip, index) => (
-              <div
-                key={index}
-                className={`flex items-start gap-2 rounded-2xl border border-border/60 bg-background/60 p-4 backdrop-blur-sm ${
-                  isArabic ? "flex-row-reverse text-right" : "text-left"
-                }`}
-              >
-                <CheckCircle2 className="h-4 w-4 mt-1 text-emerald-600 shrink-0" />
-                <p className="text-sm text-muted-foreground">{tip}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-background/95 backdrop-blur">
-          <CardHeader className="text-center pb-6 pt-8 px-6 bg-gradient-to-br from-background via-primary/5 to-accent/30 border-b">
-            <div className="flex justify-center mb-5">
-              <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center shadow-sm">
-                <Activity className="h-10 w-10 text-primary" />
+      <div
+        className="container max-w-4xl px-4 mx-auto"
+        style={{
+          paddingTop: `${DESKTOP_HEADER_HEIGHT + 12}px`,
+          paddingBottom: "24px",
+        }}
+      >
+        <Card className="border-0 shadow-xl rounded-2xl overflow-hidden bg-background/95 backdrop-blur">
+          <CardHeader className="text-center pb-4 pt-5 px-5 bg-gradient-to-br from-background via-primary/5 to-accent/30 border-b">
+            <div className="flex justify-center mb-3">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shadow-sm">
+                <Activity className="h-7 w-7 text-primary" />
               </div>
             </div>
 
-            <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">
+            <CardTitle className="text-2xl md:text-3xl font-bold tracking-tight">
               {t("diagnosisWizard.pageTitle")}
             </CardTitle>
 
-            <CardDescription className="text-base md:text-lg mt-3 max-w-2xl mx-auto leading-7">
+            <CardDescription className="text-sm md:text-base mt-2 max-w-xl mx-auto leading-6">
               {t("diagnosisWizard.pageSubtitle")}
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="pt-8 px-6 md:px-8 pb-8">
-            <div className="mb-10">
+          <CardContent className="pt-5 px-4 md:px-6 pb-6">
+            <div className="mb-6">
               <div
                 className={`flex items-start ${
                   isArabic ? "flex-row-reverse" : ""
@@ -333,24 +286,26 @@ export default function DiagnosisWizard() {
                         }`}
                       >
                         <div
-                          className={`h-11 w-11 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
+                          className={`h-9 w-9 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
                             isCompleted
                               ? "bg-primary border-primary text-primary-foreground"
                               : isCurrent
-                              ? "border-primary bg-primary/10 text-primary shadow-md scale-105"
+                              ? "border-primary bg-primary/10 text-primary shadow-sm scale-105"
                               : "border-border bg-background text-muted-foreground"
                           }`}
                         >
                           {isCompleted ? (
-                            <Check className="h-5 w-5" />
+                            <Check className="h-4 w-4" />
                           ) : (
-                            <span className="text-sm font-bold">{index + 1}</span>
+                            <span className="text-xs font-bold">
+                              {index + 1}
+                            </span>
                           )}
                         </div>
 
-                        <div className="mt-3 max-w-[120px]">
+                        <div className="mt-2 max-w-[100px]">
                           <p
-                            className={`text-sm font-medium leading-5 transition-colors ${
+                            className={`text-xs font-medium leading-4 transition-colors ${
                               isCurrent || isCompleted
                                 ? "text-foreground"
                                 : "text-muted-foreground"
@@ -363,11 +318,11 @@ export default function DiagnosisWizard() {
 
                       {!isLast && (
                         <div
-                          className={`pt-5 ${
-                            isArabic ? "pr-3 pl-3" : "pl-3 pr-3"
+                          className={`pt-4 ${
+                            isArabic ? "pr-2 pl-2" : "pl-2 pr-2"
                           } flex-1`}
                         >
-                          <div className="h-[3px] w-full rounded-full bg-border overflow-hidden">
+                          <div className="h-[2px] w-full rounded-full bg-border overflow-hidden">
                             <div
                               className={`h-full rounded-full bg-primary transition-all duration-700 ease-in-out ${
                                 index < currentStepIndex ? "w-full" : "w-0"
@@ -383,8 +338,8 @@ export default function DiagnosisWizard() {
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="relative min-h-[320px]">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                <div className="relative min-h-[230px]">
                   <div
                     className={`transition-all duration-500 ease-out ${
                       activeStep === "basic"
@@ -393,27 +348,27 @@ export default function DiagnosisWizard() {
                     }`}
                   >
                     {activeStep === "basic" && (
-                      <Card className="border border-border/70 shadow-sm rounded-2xl bg-card/40 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
-                        <CardHeader className="pb-4">
+                      <Card className="border border-border/70 shadow-sm rounded-xl bg-card/40 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
+                        <CardHeader className="pb-3 px-4 pt-4">
                           <div
                             className={`flex items-center gap-2 ${
                               isArabic ? "flex-row-reverse" : ""
                             }`}
                           >
-                            <UserRound className="h-5 w-5 text-primary" />
+                            <UserRound className="h-4 w-4 text-primary" />
                             <div className={sectionTitleClass}>
-                              <CardTitle className="text-xl">
+                              <CardTitle className="text-lg">
                                 {t("diagnosisWizard.section1")}
                               </CardTitle>
-                              <CardDescription className="mt-1">
+                              <CardDescription className="mt-1 text-sm">
                                 {t("diagnosisWizard.section1Desc")}
                               </CardDescription>
                             </div>
                           </div>
                         </CardHeader>
 
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <CardContent className="px-4 pb-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
                               name="pregnancies"
@@ -431,10 +386,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.pregnanciesPlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.pregnanciesDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -447,7 +402,9 @@ export default function DiagnosisWizard() {
                               name="age"
                               render={({ field }) => (
                                 <FormItem className={fieldTextClass}>
-                                  <FormLabel>{t("diagnosisWizard.age")}</FormLabel>
+                                  <FormLabel>
+                                    {t("diagnosisWizard.age")}
+                                  </FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
@@ -457,10 +414,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.agePlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.ageDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -481,27 +438,27 @@ export default function DiagnosisWizard() {
                     }`}
                   >
                     {activeStep === "vitals" && (
-                      <Card className="border border-border/70 shadow-sm rounded-2xl bg-card/40 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
-                        <CardHeader className="pb-4">
+                      <Card className="border border-border/70 shadow-sm rounded-xl bg-card/40 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
+                        <CardHeader className="pb-3 px-4 pt-4">
                           <div
                             className={`flex items-center gap-2 ${
                               isArabic ? "flex-row-reverse" : ""
                             }`}
                           >
-                            <HeartPulse className="h-5 w-5 text-primary" />
+                            <HeartPulse className="h-4 w-4 text-primary" />
                             <div className={sectionTitleClass}>
-                              <CardTitle className="text-xl">
+                              <CardTitle className="text-lg">
                                 {t("diagnosisWizard.section2")}
                               </CardTitle>
-                              <CardDescription className="mt-1">
+                              <CardDescription className="mt-1 text-sm">
                                 {t("diagnosisWizard.section2Desc")}
                               </CardDescription>
                             </div>
                           </div>
                         </CardHeader>
 
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <CardContent className="px-4 pb-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
                               name="glucose"
@@ -519,10 +476,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.glucosePlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.glucoseDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -547,10 +504,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.bloodPressurePlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.bloodPressureDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -575,10 +532,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.skinThicknessPlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.skinThicknessDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -603,10 +560,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.insulinPlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.insulinDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -619,7 +576,9 @@ export default function DiagnosisWizard() {
                               control={form.control}
                               render={({ field }) => (
                                 <FormItem className={fieldTextClass}>
-                                  <FormLabel>{t("diagnosisWizard.bmi")}</FormLabel>
+                                  <FormLabel>
+                                    {t("diagnosisWizard.bmi")}
+                                  </FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
@@ -630,10 +589,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.bmiPlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.bmiDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -654,27 +613,27 @@ export default function DiagnosisWizard() {
                     }`}
                   >
                     {activeStep === "risk" && (
-                      <Card className="border border-border/70 shadow-sm rounded-2xl bg-card/40 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
-                        <CardHeader className="pb-4">
+                      <Card className="border border-border/70 shadow-sm rounded-xl bg-card/40 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
+                        <CardHeader className="pb-3 px-4 pt-4">
                           <div
                             className={`flex items-center gap-2 ${
                               isArabic ? "flex-row-reverse" : ""
                             }`}
                           >
-                            <FlaskConical className="h-5 w-5 text-primary" />
+                            <FlaskConical className="h-4 w-4 text-primary" />
                             <div className={sectionTitleClass}>
-                              <CardTitle className="text-xl">
+                              <CardTitle className="text-lg">
                                 {t("diagnosisWizard.section3")}
                               </CardTitle>
-                              <CardDescription className="mt-1">
+                              <CardDescription className="mt-1 text-sm">
                                 {t("diagnosisWizard.section3Desc")}
                               </CardDescription>
                             </div>
                           </div>
                         </CardHeader>
 
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <CardContent className="px-4 pb-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                               name="diabetesPedigreeFunction"
                               control={form.control}
@@ -693,10 +652,10 @@ export default function DiagnosisWizard() {
                                         "diagnosisWizard.pedigreePlaceholder"
                                       )}
                                       {...field}
-                                      className="h-12 rounded-xl"
+                                      className="h-10 rounded-lg"
                                     />
                                   </FormControl>
-                                  <FormDescription>
+                                  <FormDescription className="text-xs">
                                     {t("diagnosisWizard.pedigreeDesc")}
                                   </FormDescription>
                                   <FormMessage />
@@ -710,14 +669,16 @@ export default function DiagnosisWizard() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between pt-2">
-                  <div className="flex gap-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between pt-1">
+                  <div className="flex gap-2">
                     {activeStep !== "basic" && (
                       <Button
                         type="button"
                         variant="outline"
                         onClick={goPrevious}
-                        className={isArabic ? "flex-row-reverse" : ""}
+                        className={`h-9 px-4 text-sm rounded-lg ${
+                          isArabic ? "flex-row-reverse" : ""
+                        }`}
                       >
                         {isArabic ? (
                           <ArrowRight className="ml-2 h-4 w-4" />
@@ -732,7 +693,9 @@ export default function DiagnosisWizard() {
                       <Button
                         type="button"
                         onClick={goNext}
-                        className={isArabic ? "flex-row-reverse" : ""}
+                        className={`h-9 px-5 text-sm rounded-lg ${
+                          isArabic ? "flex-row-reverse" : ""
+                        }`}
                       >
                         {t("diagnosisWizard.next")}
                         {isArabic ? (
@@ -749,7 +712,7 @@ export default function DiagnosisWizard() {
                       type="submit"
                       size="lg"
                       disabled={isLoading || !isValid}
-                      className="w-full md:w-auto md:min-w-[320px] text-lg py-6 rounded-2xl shadow-lg"
+                      className="w-full md:w-auto md:min-w-[250px] text-base py-5 rounded-xl shadow-md"
                     >
                       {isLoading ? (
                         <>
@@ -765,17 +728,6 @@ export default function DiagnosisWizard() {
                       )}
                     </Button>
                   )}
-                </div>
-
-                <div
-                  className={`flex items-center justify-center gap-2 text-sm mt-2 ${
-                    isArabic ? "flex-row-reverse" : ""
-                  }`}
-                >
-                  <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
-                  <p className="text-center text-amber-700 leading-6 font-medium">
-                    {t("diagnosisWizard.footer")}
-                  </p>
                 </div>
               </form>
             </Form>

@@ -18,6 +18,8 @@ import Footer from "@/components/Shared/Footer";
 import { useTranslation } from "react-i18next";
 import { useIsVisible } from "@/hooks/useIsVisible";
 
+const DESKTOP_HEADER_HEIGHT = 72;
+
 const ContactUs = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language.startsWith("ar");
@@ -171,7 +173,13 @@ const ContactUs = () => {
     >
       <Header />
 
-      <main className="flex-1 py-12 px-4">
+      <main
+        className="flex-1 px-4"
+        style={{
+          paddingTop: `${DESKTOP_HEADER_HEIGHT + 48}px`,
+          paddingBottom: "48px",
+        }}
+      >
         <div className="container mx-auto max-w-5xl">
           <div
             ref={heroRef}

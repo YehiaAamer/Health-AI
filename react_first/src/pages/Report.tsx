@@ -2,7 +2,6 @@ import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, ArrowLeft, Download } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -17,6 +16,8 @@ interface ExtendedjsPDF extends jsPDF {
     finalY: number;
   };
 }
+
+const DESKTOP_HEADER_HEIGHT = 72;
 
 export default function Report() {
   const location = useLocation();
@@ -39,39 +40,6 @@ export default function Report() {
   const riskLevel = result.riskLevel ?? t("report.unknown");
   const message = result.message ?? "";
   const formData = result.formData || {};
-
-  const localizeBackendMessage = (rawMessage: string) => {
-    if (!rawMessage) return t("report.noAdditionalMessage");
-
-    const text = String(rawMessage).trim();
-
-    if (isArabic) {
-      return text;
-    }
-
-    return text
-      .replace(/احتمالية الإصابة/g, "Infection Probability")
-      .replace(/مستوى المخاطر/g, "Risk Level")
-      .replace(/مستوى الخطورة/g, "Risk Level")
-      .replace(/عوامل الخطر/g, "Risk Factors")
-      .replace(/منخفض/g, "Low")
-      .replace(/متوسط/g, "Medium")
-      .replace(/مرتفع/g, "High")
-      .replace(/السمنة/g, "Obesity")
-      .replace(/عامل وراثي/g, "Genetic factor")
-      .replace(
-        /استمر في الحفاظ على نمط حياة صحي/g,
-        "Continue maintaining a healthy lifestyle"
-      )
-      .replace(
-        /راجع طبيبًا مختصًا في أقرب وقت/g,
-        "Consult a specialist as soon as possible"
-      )
-      .replace(
-        /يُنصح بالمتابعة الطبية المنتظمة/g,
-        "Regular medical follow-up is recommended"
-      );
-  };
 
   const normalizeRiskLevel = (risk?: string) => {
     const value = String(risk || "").trim().toLowerCase();
@@ -117,10 +85,6 @@ export default function Report() {
         return riskLevel || t("report.unknown");
     }
   }, [normalizedRisk, riskLevel, t]);
-
-  const localizedMessage = useMemo(() => {
-    return localizeBackendMessage(message);
-  }, [message, isArabic, t]);
 
   const riskColor =
     probability > 70
@@ -237,7 +201,7 @@ export default function Report() {
       );
 
       doc.setFontSize(14);
-      doc.text(localizedMessage || t("report.noAdditionalMessage"), 20, 110, {
+      doc.text(message || t("report.noAdditionalMessage"), 20, 110, {
         maxWidth: 170,
         align: "left",
       });
@@ -277,15 +241,6 @@ export default function Report() {
         });
       });
 
-      doc.setFontSize(10);
-      doc.setTextColor(120, 120, 120);
-      doc.text(
-        t("report.disclaimerText"),
-        20,
-        doc.internal.pageSize.height - 30,
-        { maxWidth: 170 }
-      );
-
       doc.save(
         `Diabetes_Risk_Report_${new Date().toISOString().slice(0, 10)}.pdf`
       );
@@ -302,7 +257,13 @@ export default function Report() {
         dir={isArabic ? "rtl" : "ltr"}
       >
         <Header variant="dashboard" />
-        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+        <main
+          className="flex-1 container mx-auto px-4 flex items-center justify-center"
+          style={{
+            paddingTop: `${DESKTOP_HEADER_HEIGHT + 32}px`,
+            paddingBottom: "32px",
+          }}
+        >
           <Card className="w-full max-w-md rounded-2xl border border-border/60 shadow-lg">
             <CardContent className="pt-8 pb-8 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500/10">
@@ -335,40 +296,47 @@ export default function Report() {
       className="min-h-screen flex flex-col bg-background"
       dir={isArabic ? "rtl" : "ltr"}
     >
-      <Header />
+      <Header variant="dashboard" />
 
-      <main className="flex-1 container max-w-5xl py-10 px-4 mx-auto">
-        <Card className="overflow-hidden rounded-3xl border border-border/60 shadow-xl">
-          <CardHeader className="text-center pb-4 pt-8 px-6 md:px-8 border-b bg-muted/20">
+      <main
+        className="flex-1 container max-w-5xl px-4 mx-auto"
+        style={{
+          paddingTop: `${DESKTOP_HEADER_HEIGHT + 32}px`,
+          paddingBottom: "40px",
+        }}
+      >
+        <Card className="overflow-hidden rounded-3xl border border-border/60 shadow-xl bg-background/95">
+          <CardHeader className="text-center pb-5 pt-8 px-6 md:px-8 border-b bg-muted/10">
             <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">
               {t("report.title")}
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="p-6 md:p-8 space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 items-stretch">
-              <Card className="rounded-2xl border border-border/60 shadow-sm">
-                <CardContent className="p-6 md:p-8 flex flex-col items-center justify-center text-center h-full">
-                  <span
-                    className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3"
+          <CardContent className="p-6 md:p-8 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
+              <Card className="rounded-3xl border border-border/60 shadow-sm overflow-hidden">
+                <CardContent className="p-6 md:p-8 h-full flex flex-col items-center justify-center text-center bg-gradient-to-br from-background to-muted/20">
+                  <div className="mb-2 text-sm font-medium text-muted-foreground">
+                    {t("report.diabetesRiskProbability")}
+                  </div>
+
+                  <div
+                    className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4"
                     style={{ color: riskColor }}
                   >
                     {probability.toFixed(2)}%
-                  </span>
+                  </div>
 
-                  <span className="text-base text-muted-foreground mb-5">
-                    {t("report.diabetesRiskProbability")}
-                  </span>
-
-                  <div className="w-52 h-52 relative mb-5">
+                  <div className="w-60 h-60 relative mb-6">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={pieData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={68}
-                          outerRadius={92}
+                          innerRadius={72}
+                          outerRadius={100}
+                          paddingAngle={2}
                           dataKey="value"
                           startAngle={90}
                           endAngle={-270}
@@ -379,51 +347,49 @@ export default function Report() {
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">
+                          {t("report.riskLevelLabel")}
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {localizedRiskLevel}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-        <Badge
-  className={`pointer-events-none text-base md:text-lg px-6 py-3 font-semibold rounded-full border shadow-sm transition-none ${
-    probability > 70
-      ? "border-destructive text-destructive !bg-destructive/10 hover:!bg-destructive/10"
-      : probability > 50
-      ? "border-orange-500 text-orange-600 !bg-orange-50 hover:!bg-orange-50"
-      : probability > 20
-      ? "border-yellow-500 text-yellow-600 !bg-yellow-50 hover:!bg-yellow-50"
-      : "border-green-500 text-green-600 !bg-green-50 hover:!bg-green-50"
-  }`}
->
-  {t("report.riskLevelLabel")}: {localizedRiskLevel}
-</Badge>
+                  <Badge
+                    className={`pointer-events-none text-base px-6 py-3 font-semibold rounded-full border shadow-sm transition-none ${
+                      probability > 70
+                        ? "border-destructive text-destructive !bg-destructive/10 hover:!bg-destructive/10"
+                        : probability > 50
+                        ? "border-orange-500 text-orange-600 !bg-orange-50 hover:!bg-orange-50"
+                        : probability > 20
+                        ? "border-yellow-500 text-yellow-600 !bg-yellow-50 hover:!bg-yellow-50"
+                        : "border-green-500 text-green-600 !bg-green-50 hover:!bg-green-50"
+                    }`}
+                  >
+                    {localizedRiskLevel}
+                  </Badge>
                 </CardContent>
               </Card>
 
               <div className="flex flex-col gap-6">
-                <Alert
-                  className={`rounded-2xl border shadow-sm ${
-                    probability > 70
-                      ? "border-destructive/40 bg-destructive/5"
-                      : "border-yellow-500/40 bg-yellow-50"
-                  }`}
-                >
-                  <AlertTriangle
-                    className={`h-6 w-6 ${
-                      probability > 70 ? "text-destructive" : "text-yellow-600"
-                    } mt-1`}
-                  />
-                  <div>
-                    <AlertTitle className="text-lg font-semibold">
-                      {probability > 70
-                        ? t("report.importantWarning")
-                        : t("report.preliminaryResult")}
-                    </AlertTitle>
-                    <AlertDescription className="text-base mt-2 leading-7">
-                      {localizedMessage}
-                    </AlertDescription>
-                  </div>
-                </Alert>
+                <Card className="rounded-3xl border border-border/60 shadow-sm">
+                  <CardContent className="p-6 md:p-7">
+                    <h3 className="text-lg font-semibold mb-3">
+                      {t("report.preliminaryResult")}
+                    </h3>
+                    <p className="text-sm md:text-base leading-7 text-muted-foreground">
+                      {message || t("report.noAdditionalMessage")}
+                    </p>
+                  </CardContent>
+                </Card>
 
-                <Card className="rounded-2xl border border-border/60 shadow-sm bg-muted/30">
-                  <CardContent className="p-6">
+                <Card className="rounded-3xl border border-border/60 shadow-sm bg-muted/20">
+                  <CardContent className="p-6 md:p-7">
                     <h3 className="text-lg font-semibold mb-4">
                       {t("report.personalizedRecommendations")}
                     </h3>
@@ -431,7 +397,7 @@ export default function Report() {
                       {recommendations.map((rec, index) => (
                         <li
                           key={index}
-                          className="flex items-start gap-3 rounded-xl bg-background border border-border/50 px-4 py-3"
+                          className="flex items-start gap-3 rounded-2xl bg-background border border-border/50 px-4 py-3"
                         >
                           <span
                             className="mt-2 h-2 w-2 rounded-full shrink-0"
@@ -446,31 +412,31 @@ export default function Report() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                {t("report.pdf.parameter")}
-              </h3>
+            <Card className="rounded-3xl border border-border/60 shadow-sm">
+              <CardContent className="p-6 md:p-7">
+                <h3 className="text-lg font-semibold mb-4">
+                  {t("report.pdf.parameter")}
+                </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                {Object.entries(formData).map(([key, value]) => (
-                  <Card
-                    key={key}
-                    className="rounded-2xl border border-border/60 shadow-sm"
-                  >
-                    <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  {Object.entries(formData).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="rounded-2xl border border-border/60 bg-background px-4 py-4"
+                    >
                       <div className="text-sm text-muted-foreground leading-6">
                         {getFieldLabel(key)}
                       </div>
                       <div className="text-lg font-semibold mt-2 tracking-tight">
                         {String(value)}
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
               <Button
                 variant="outline"
                 asChild
@@ -494,14 +460,6 @@ export default function Report() {
                 {t("report.downloadPdf")}
               </Button>
             </div>
-
-            <Alert variant="destructive" className="mt-2 rounded-2xl">
-              <AlertTriangle className="h-5 w-5" />
-              <AlertTitle>{t("report.disclaimerTitle")}</AlertTitle>
-              <AlertDescription className="mt-2 leading-7">
-                {t("report.disclaimerText")}
-              </AlertDescription>
-            </Alert>
           </CardContent>
         </Card>
       </main>

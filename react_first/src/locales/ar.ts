@@ -1,71 +1,110 @@
 const ar = {
   home: "الرئيسية",
+
   dashboard: {
-    title: "لوحة التحكم",
-    welcome: "أهلاً بعودتك",
-    hello: "يا",
-    subtitle: "صحتك، بقوة الذكاء الاصطناعي.",
-    mainMenu: "القائمة الرئيسية",
-    search: "بحث",
-    clearSearch: "مسح البحث",
-    newTest: "عمل فحص جديد",
-    newCheckup: "فحص جديد",
-    recentAnalyses: "التحاليل الحديثة",
-    previousReports: "التقارير السابقة",
-    bookConsultation: "احجز استشارة",
-    settings: "الإعدادات",
-    riskLow: "منخفض",
-    riskMedium: "متوسط",
-    riskHigh: "مرتفع",
-    loading: "جاري تحميل البيانات...",
-    fetchError: "لم نتمكن من جلب التحاليل السابقة",
-    dataError: "خطأ في جلب البيانات",
-    unableToLoadAnalyses: "تعذر تحميل التحليلات",
+  title: "لوحة التحكم",
+  welcome: "أهلاً بعودتك",
+  hello: "يا",
+  subtitle: "صحتك، بقوة الذكاء الاصطناعي.",
+  mainMenu: "القائمة الرئيسية",
+  search: "بحث",
+  clearSearch: "مسح البحث",
+  newTest: "عمل فحص جديد",
+  newCheckup: "فحص جديد",
+  recentAnalyses: "التحاليل الحديثة",
+  previousReports: "التقارير السابقة",
+  bookConsultation: "احجز استشارة",
+  settings: "الإعدادات",
 
-    noPreviousAnalyses: "لا توجد تحاليل سابقة",
-    firstTestNow: "عمل تحليل أول الآن",
-    noReportsYet: "لا توجد تقارير سابقة بعد",
-    reportCount: "تقرير",
+  trash: "المهملات",
+  deleteReport: "حذف التقرير",
+  deleteSuccess: "تم نقل التقرير إلى المهملات",
+  deleteError: "حدث خطأ أثناء حذف التقرير",
+riskIndicators: "مؤشرات الخطورة",
+  riskLow: "منخفض",
+  riskMedium: "متوسط",
+  riskHigh: "مرتفع",
+  loading: "جاري تحميل البيانات...",
+  fetchError: "لم نتمكن من جلب التحاليل السابقة",
+  dataError: "خطأ في جلب البيانات",
+  unableToLoadAnalyses: "تعذر تحميل التحليلات",
+  noPreviousAnalyses: "لا توجد تحاليل سابقة",
+  firstTestNow: "عمل تحليل أول الآن",
+  noReportsYet: "لا توجد تقارير سابقة بعد",
+  reportCount: "تقرير",
 
-    averageRisk: "متوسط نسبة الخطورة",
-    latestStatus: "آخر حالة",
-    savedReports: "التقارير المحفوظة",
-    lastCheckup: "آخر تحليل",
+  averageRisk: "متوسط نسبة الخطورة",
+  latestStatus: "آخر حالة",
+  savedReports: "التقارير المحفوظة",
+  lastCheckup: "آخر تحليل",
 
-    analysisOverview:
-      "نظرة عامة على أحدث التحليلات المعتمدة على الذكاء الاصطناعي",
-    weekly: "أسبوعي",
-    monthly: "شهري",
-    latestAnalysisScore: "نتيجة آخر تحليل",
-    noData: "لا توجد بيانات",
-    progress: "التقدم",
-    outOf: "من",
+  analysisOverview: "نظرة عامة على تحاليل السكري لديك",
+allReports: "كل التقارير",
+ weekly: "أسبوعي",
+  monthly: "شهري",
+  latestAnalysisScore: "نتيجة آخر تحليل",
+  noData: "لا توجد بيانات",
+  progress: "التقدم",
+  outOf: "من",
 
-    pregnancies: "عدد مرات الحمل",
-    glucose: "الجلوكوز",
-    bloodPressure: "ضغط الدم",
-    skinThickness: "سماكة الجلد",
-    insulin: "الإنسولين",
-    bmi: "مؤشر كتلة الجسم",
-    age: "العمر",
-    diabetesPedigree: "العامل الوراثي",
+  pregnancies: "عدد مرات الحمل",
+  glucose: "الجلوكوز",
+  bloodPressure: "ضغط الدم",
+  skinThickness: "سماكة الجلد",
+  insulin: "الإنسولين",
+  bmi: "مؤشر كتلة الجسم",
+  age: "العمر",
+  diabetesPedigree: "العامل الوراثي",
 
-    infectionProbability: "احتمالية الإصابة",
-    viewReport: "عرض التقرير",
-    date: "التاريخ",
-    action: "الإجراء",
+  infectionProbability: "احتمالية الإصابة",
+  viewReport: "عرض التقرير",
+  date: "التاريخ",
+  action: "الإجراءات",
 
-    healthTipText:
-      "حافظ على رطوبة جسدك، مارس الرياضة بانتظام، واحصل على قسط كافٍ من النوم لصحة أفضل.",
+  healthTipText:
+    "حافظ على رطوبة جسدك، مارس الرياضة بانتظام، واحصل على قسط كافٍ من النوم لصحة أفضل.",
 
-    lastDoctorContact: "آخر تواصل مع الطبيب",
-    lastDoctorContactDesc: "آخر موعد استشارة تم تسجيله",
-    doctorCardTitle: "الطبيب المعالج",
-    doctorCardText:
-      "سيظهر آخر طبيب تم التواصل معه هنا عند توفر بيانات الاستشارة.",
-    openConsultations: "افتح الاستشارات"
-  },
+  lastDoctorContact: "آخر تواصل مع الطبيب",
+  lastDoctorContactDesc: "آخر موعد استشارة تم تسجيله",
+  doctorCardTitle: "الطبيب المعالج",
+  doctorCardText:
+    "سيظهر آخر طبيب تم التواصل معه هنا عند توفر بيانات الاستشارة.",
+  openConsultations: "افتح الاستشارات",
 
+  logout: "تسجيل الخروج",
+  help: "المساعدة",
+  logoutError: "فشل تسجيل الخروج",
+
+  last7Days: "آخر 7 أيام",
+  last30Days: "آخر 30 يوم",
+
+  riskTooltip: "نسبة الخطورة",
+  valueLabel: "القيمة",
+
+  weeklyAverage: "متوسط الأسبوع",
+  monthlyAverage: "متوسط الشهر",
+
+  reportsThisWeek: "تقارير هذا الأسبوع",
+  reportsThisMonth: "تقارير هذا الشهر",
+
+  highestWeeklyRisk: "أعلى خطورة هذا الأسبوع",
+  highestMonthlyRisk: "أعلى خطورة هذا الشهر",
+
+  noWeeklyReportsTitle: "لا توجد تقارير أسبوعية",
+  noMonthlyReportsTitle: "لا توجد تقارير شهرية",
+
+  noWeeklyReportsDesc: "لا توجد تحليلات محفوظة خلال آخر 7 أيام.",
+  noMonthlyReportsDesc: "لا توجد تحليلات محفوظة خلال آخر 30 يوم.",
+
+  chartShortPregnancies: "الحمل",
+  chartShortGlucose: "الجلوكوز",
+  chartShortBloodPressure: "الضغط",
+  chartShortSkinThickness: "الجلد",
+  chartShortInsulin: "الإنسولين",
+  chartShortBmi: "BMI",
+  chartShortDiabetesPedigree: "الوراثة",
+  chartShortAge: "العمر"
+},
   report: {
     title: "تقرير التحليل المبدئي",
     unknown: "غير معروف",
@@ -152,6 +191,7 @@ const ar = {
     firstName: "الاسم الأول",
     lastName: "اسم العائلة",
     email: "البريد الإلكتروني",
+    editPassword: "تعديل كلمة المرور",
     phone: "رقم الهاتف",
     saveChanges: "حفظ التغييرات",
     saving: "جاري الحفظ...",
@@ -238,38 +278,37 @@ const ar = {
   },
 
   chatBot: {
-  title: "المساعد الطبي الذكي",
-  connectedToLastPrediction: "متصل بتحليلك الأخير",
-  generalMode: "وضع عام",
+    title: "المساعد الطبي الذكي",
+    connectedToLastPrediction: "متصل بتحليلك الأخير",
+    generalMode: "وضع عام",
 
-  welcomeInitial: "أهلاً بك، أنا مساعدك الطبي الذكي.",
-  welcomeFollowUp:
-    "يمكنني مساعدتك في الإجابة عن استفساراتك المتعلقة بصحتك العامة والسكري.",
+    welcomeInitial: "أهلاً بك، أنا مساعدك الطبي الذكي.",
+    welcomeFollowUp:
+      "يمكنني مساعدتك في الإجابة عن استفساراتك المتعلقة بصحتك العامة والسكري.",
 
-  floatingMessage1: "أهلاً بك، أنا مساعدك الطبي الذكي.",
-  floatingMessage2:
-    "يمكنني مساعدتك في الإجابة عن استفساراتك المتعلقة بصحتك العامة والسكري.",
+    floatingMessage1: "أهلاً بك، أنا مساعدك الطبي الذكي.",
+    floatingMessage2:
+      "يمكنني مساعدتك في الإجابة عن استفساراتك المتعلقة بصحتك العامة والسكري.",
 
-  typing: "جاري الكتابة...",
-  inputPlaceholder: "اكتب سؤالك هنا...",
-  disclaimer: "هذا مساعد ذكي ولا يغني عن استشارة طبيب متخصص",
-  fallbackError:
-    "عذراً، هناك مشكلة تقنية حالياً. يرجى المحاولة لاحقاً أو استشارة طبيب.",
-  temporarilyDisabled: "(Chatbot معطل مؤقتاً)",
-  unavailableToast: "Chatbot غير متاح حالياً",
-  openAriaLabel: "فتح المساعد",
-  minimizeAriaLabel: "تصغير الشات",
-  closeAriaLabel: "إغلاق الشات",
-  closeHintAriaLabel: "إغلاق الرسالة",
-  fallbackResponses: {
-    why: "النسبة بتتعتمد على عوامل كتير زي الجلوكوز، BMI، العمر، والعامل الوراثي.",
-    how: "من خلال تحليل البيانات الطبية بتاعتك ومقارنتها بآلاف الحالات المشابهة.",
-    serious:
-      "مستوى الخطر بيتحدد بناءً على النسبة. لو النسبة فوق 50% ينصح بمراجعة طبيب.",
-    treatment: "الخطوات الأساسية: نظام غذائي صحي، رياضة منتظمة، ومتابعة مع طبيب."
-  },
-  sendAriaLabel: "إرسال الرسالة"
-
+    typing: "جاري الكتابة...",
+    inputPlaceholder: "اكتب سؤالك هنا...",
+    disclaimer: "هذا مساعد ذكي ولا يغني عن استشارة طبيب متخصص",
+    fallbackError:
+      "عذراً، هناك مشكلة تقنية حالياً. يرجى المحاولة لاحقاً أو استشارة طبيب.",
+    temporarilyDisabled: "(Chatbot معطل مؤقتاً)",
+    unavailableToast: "Chatbot غير متاح حالياً",
+    openAriaLabel: "فتح المساعد",
+    minimizeAriaLabel: "تصغير الشات",
+    closeAriaLabel: "إغلاق الشات",
+    closeHintAriaLabel: "إغلاق الرسالة",
+    fallbackResponses: {
+      why: "النسبة بتتعتمد على عوامل كتير زي الجلوكوز، BMI، العمر، والعامل الوراثي.",
+      how: "من خلال تحليل البيانات الطبية بتاعتك ومقارنتها بآلاف الحالات المشابهة.",
+      serious:
+        "مستوى الخطر بيتحدد بناءً على النسبة. لو النسبة فوق 50% ينصح بمراجعة طبيب.",
+      treatment: "الخطوات الأساسية: نظام غذائي صحي، رياضة منتظمة، ومتابعة مع طبيب."
+    },
+    sendAriaLabel: "إرسال الرسالة"
   },
 
   faqs: "الأسئلة الشائعة",
@@ -385,6 +424,25 @@ const ar = {
     egypt: "مصر"
   },
 
+trash: {
+  title: "المحذوفة مؤخرًا",
+  subtitle: "يمكنك استرجاع التقارير في أي وقت",
+actions: "الإجراءات",
+restoreError: "حدث خطأ أثناء استرجاع التقرير",
+  deletedReports: "التقارير المحذوفة",
+  backToDashboard: "العودة إلى لوحة التحكم",
+
+  emptyTitle: "لا توجد تقارير محذوفة",
+  emptyDescription: "عند حذف أي تقرير سيظهر هنا",
+latestDeletedReport: "آخر تقرير محذوف",
+  report: "التقرير",
+  glucose: "الجلوكوز",
+  date: "التاريخ",
+
+  restore: "استرجاع",
+  restoreSuccess: "تم استرجاع التقرير بنجاح"
+},
+
   authPage: {
     secureAccess: "الدخول الآمن",
     loginSubtitle: "سجل الدخول إلى حسابك",
@@ -393,6 +451,8 @@ const ar = {
     signupTab: "إنشاء حساب",
     email: "البريد الإلكتروني",
     password: "كلمة المرور",
+     orContinueWith: "أو تسجيل الدخول باستخدام",
+  forgotPassword: "هل نسيت كلمة المرور؟",
     processing: "جاري المعالجة...",
     loginButton: "تسجيل الدخول",
     signupButton: "إنشاء الحساب",
@@ -443,6 +503,7 @@ const ar = {
     startAnalysis: "ابدأ التحليل",
     totalReports: "إجمالي التقارير",
     latestTest: "أحدث فحص",
+    riskLevel: "مستوى الخطورة",
     average: "المتوسط",
     infectionProbability: "احتمالية الإصابة",
     date: "التاريخ",
@@ -460,42 +521,66 @@ const ar = {
   },
 
   consultationsPage: {
-    title: "احجز استشارة أونلاين",
-    subtitle:
-      "تواصل مع أطباء معتمدين للحصول على إرشاد متخصص بعد تقريرك الصحي بالذكاء الاصطناعي.",
-    illustrationText: "رسم توضيحي لاستشارة طبيب",
-    bookingSection: "قسم الحجز",
-    specialization: "تخصص الطبيب",
-    timeSlots: "الأوقات المتاحة",
-    confirm: "تأكيد الحجز",
-    upcoming: "المواعيد القادمة",
-    joinCall: "انضم للمكالمة",
-    upcomingStatus: "قادم",
-    cancelledStatus: "ملغي",
-    reschedule: "إعادة جدولة",
-    cancel: "إلغاء",
-    rescheduleTitle: "إعادة جدولة الموعد",
-    newDate: "تاريخ جديد",
-    newTime: "وقت جديد",
-    selectNewTime: "اختر الوقت الجديد",
-    save: "حفظ التغييرات",
-    selectRequired: "يرجى اختيار جميع الحقول المطلوبة",
-    selectValidSpecialization: "يرجى اختيار تخصص صحيح",
-    slotBooked: "هذا الموعد محجوز بالفعل",
-    confirmed: "تم تأكيد الحجز!",
-    selectNewDateTime: "يرجى اختيار التاريخ والوقت الجديدين",
-    newSlotBooked: "الموعد الجديد محجوز بالفعل",
-    generalPractitioner: "طبيب عام",
-    cardiologist: "طبيب قلب",
-    dermatologist: "طبيب جلدية",
-    neurologist: "طبيب أعصاب",
-    time1000: "10:00 ص",
-    time1100: "11:00 ص",
-    time1400: "2:00 م",
-    time1500: "3:00 م",
-    time1600: "4:00 م"
-  },
+  title: "احجز استشارة أونلاين",
+  subtitle:
+    "تواصل مع أطباء معتمدين للحصول على إرشاد متخصص بعد تقريرك الصحي بالذكاء الاصطناعي.",
+  illustrationText: "رسم توضيحي لاستشارة طبيب",
+  bookingSection: "قسم الحجز",
+  specialization: "تخصص الطبيب",
+  timeSlots: "الأوقات المتاحة",
+  confirm: "تأكيد الحجز",
+  upcoming: "المواعيد القادمة",
+  joinCall: "انضم للمكالمة",
+  upcomingStatus: "قادم",
+  cancelledStatus: "ملغي",
+  reschedule: "إعادة جدولة",
+  cancel: "إلغاء",
+  rescheduleTitle: "إعادة جدولة الموعد",
+  newDate: "تاريخ جديد",
+  newTime: "وقت جديد",
+  selectNewTime: "اختر الوقت الجديد",
+  save: "حفظ التغييرات",
+  selectRequired: "يرجى اختيار جميع الحقول المطلوبة",
+  selectValidSpecialization: "يرجى اختيار تخصص صحيح",
+  slotBooked: "هذا الموعد محجوز بالفعل",
+  confirmed: "تم تأكيد الحجز!",
+  selectNewDateTime: "يرجى اختيار التاريخ والوقت الجديدين",
+  newSlotBooked: "الموعد الجديد محجوز بالفعل",
 
+  joinToast: "جارٍ الانضمام إلى استشارة {{doctor}}...",
+  rescheduleSuccess: "تمت إعادة جدولة موعد {{doctor}} بنجاح",
+  cancelToast: "تم إلغاء موعد {{doctor}}",
+
+  generalPractitioner: "طبيب عام",
+  cardiologist: "طبيب قلب",
+  dermatologist: "طبيب جلدية",
+  neurologist: "طبيب أعصاب",
+
+  time1000: "10:00 ص",
+  time1100: "11:00 ص",
+  time1400: "2:00 م",
+  time1500: "3:00 م",
+  time1600: "4:00 م",
+
+  doctors: {
+    general: {
+      name: "د. إميلي كارتر",
+      specialty: "طبيب عام"
+    },
+    cardio: {
+      name: "د. ديفيد لي",
+      specialty: "طبيب قلب"
+    },
+    derma: {
+      name: "د. صوفيا رودريغيز",
+      specialty: "طبيب جلدية"
+    },
+    neuro: {
+      name: "د. مايكل آدامز",
+      specialty: "طبيب أعصاب"
+    }
+  }
+},
   diagnosisWizard: {
     backHome: "العودة إلى الرئيسية",
     pageTitle: "الكشف المبكر عن مرض السكري",

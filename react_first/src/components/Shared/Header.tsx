@@ -78,7 +78,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
-      "relative transition-colors duration-200",
+      "relative whitespace-nowrap transition-colors duration-200",
       "after:absolute after:start-0 after:-bottom-1.5 after:h-[2px] after:rounded-full after:bg-primary after:transition-all after:duration-200",
       isActive
         ? "text-primary font-medium after:w-full"
@@ -198,7 +198,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
 
       {menuOpen && (
         <div
-          className={`absolute top-full mt-2 w-56 min-w-[14rem] rounded-xl border bg-background shadow-lg z-50 overflow-hidden ${
+          className={`absolute top-full mt-2 w-56 min-w-[14rem] rounded-xl border bg-background shadow-lg z-[60] overflow-hidden ${
             isArabic ? "left-0 origin-top-left" : "right-0 origin-top-right"
           }`}
           dir={isArabic ? "rtl" : "ltr"}
@@ -258,31 +258,29 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   return (
     <>
       <header
-        className="w-full border-b bg-background"
+        className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
         dir={isArabic ? "rtl" : "ltr"}
       >
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
-            {/* Logo */}
+        <div className="w-full max-w-none px-4 sm:px-5 lg:px-6 h-[72px]">
+          <div className="flex h-full w-full min-w-0 items-center justify-between gap-4 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
             <div className="min-w-0 md:justify-self-start">
               <Link to="/home" className="flex items-center gap-2 w-fit">
                 <Activity className="h-8 w-8 text-primary shrink-0" />
-                <span className="text-xl font-bold">HealthAI</span>
+                <span className="text-xl font-bold whitespace-nowrap">
+                  HealthAI
+                </span>
               </Link>
             </div>
 
-            {/* Desktop NAVBAR */}
             <nav
-              className={`hidden md:flex items-center justify-center gap-6 md:justify-self-center ${
+              className={`hidden md:flex min-w-0 items-center justify-center gap-6 md:justify-self-center ${
                 isArabic ? "flex-row-reverse" : "flex-row"
               }`}
             >
               {renderMainLinks(false)}
             </nav>
 
-            {/* Right Side */}
-            <div className="flex items-center gap-2 shrink-0 md:justify-self-end">
-              {/* Mobile Menu Button */}
+            <div className="flex min-w-0 items-center gap-2 shrink-0 md:justify-self-end">
               <Button
                 variant="ghost"
                 size="icon"
@@ -325,10 +323,12 @@ const Header = ({ variant = "default" }: HeaderProps) => {
         </div>
       </header>
 
-      {/* Mobile Side Drawer */}
       {mobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-[100]">
-          <div className="absolute inset-0 bg-black/40" onClick={closeMobileNav} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={closeMobileNav}
+          />
 
           <div
             dir={isArabic ? "rtl" : "ltr"}

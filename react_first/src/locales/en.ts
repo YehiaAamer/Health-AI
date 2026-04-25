@@ -1,71 +1,112 @@
 const en = {
   home: "Home",
 
-  dashboard: {
-    title: "Dashboard",
-    welcome: "Welcome back",
-    hello: "Hi",
-    subtitle: "Your health, powered by AI.",
+dashboard: {
+  title: "Dashboard",
+  welcome: "Welcome back",
+  hello: "Hi",
+  subtitle: "Your health, powered by AI.",
 
-    mainMenu: "Main Menu",
-    search: "Search",
-    clearSearch: "Clear search",
-    newTest: "Start New Test",
-    newCheckup: "New Checkup",
-    recentAnalyses: "Recent Analyses",
-    previousReports: "Previous Reports",
-    bookConsultation: "Book Consultation",
-    settings: "Settings",
-    riskLow: "Low",
-    riskMedium: "Medium",
-    riskHigh: "High",
-    loading: "Loading data...",
-    fetchError: "We couldn't load your previous analyses.",
-    dataError: "Error loading data",
-    unableToLoadAnalyses: "Unable to load analyses",
+  mainMenu: "Main Menu",
+  search: "Search",
+  clearSearch: "Clear search",
+  newTest: "Start New Test",
+  newCheckup: "New Checkup",
+  recentAnalyses: "Recent Analyses",
+  previousReports: "Previous Reports",
+  bookConsultation: "Book Consultation",
+  settings: "Settings",
 
-    noPreviousAnalyses: "No previous analyses found",
-    firstTestNow: "Take your first test now",
-    noReportsYet: "No previous reports yet",
-    reportCount: "reports",
+  trash: "Trash",
+  deleteReport: "Delete report",
+  deleteSuccess: "Report moved to trash",
+  deleteError: "An error occurred while deleting the report",
+riskIndicators: "Risk Indicators",
+  riskLow: "Low",
+  riskMedium: "Medium",
+  riskHigh: "High",
+  loading: "Loading data...",
+  fetchError: "We couldn't load your previous analyses.",
+  dataError: "Error loading data",
+  unableToLoadAnalyses: "Unable to load analyses",
 
-    averageRisk: "Average Risk",
-    latestStatus: "Latest Status",
-    savedReports: "Saved Reports",
-    lastCheckup: "Last Checkup",
+  noPreviousAnalyses: "No previous analyses found",
+  firstTestNow: "Take your first test now",
+  noReportsYet: "No previous reports yet",
+  reportCount: "reports",
 
-    analysisOverview: "Overview of your latest AI-based analyses",
-    weekly: "Weekly",
-    monthly: "Monthly",
-    latestAnalysisScore: "Latest Analysis Score",
-    noData: "No Data",
-    progress: "Progress",
-    outOf: "of",
+  averageRisk: "Average Risk",
+  latestStatus: "Latest Status",
+  savedReports: "Saved Reports",
+  lastCheckup: "Last Checkup",
 
-    pregnancies: "Pregnancies",
-    glucose: "Glucose",
-    bloodPressure: "Blood Pressure",
-    skinThickness: "Skin Thickness",
-    insulin: "Insulin",
-    bmi: "BMI",
-    age: "Age",
-    diabetesPedigree: "Diabetes Pedigree",
+  analysisOverview: "Overview of your diabetes analyses",
+allReports: "All Reports",
+  weekly: "Weekly",
+  monthly: "Monthly",
+  latestAnalysisScore: "Latest Analysis Score",
+  noData: "No Data",
+  progress: "Progress",
+  outOf: "of",
 
-    infectionProbability: "Infection probability",
-    viewReport: "View Report",
-    date: "Date",
-    action: "Action",
+  pregnancies: "Pregnancies",
+  glucose: "Glucose",
+  bloodPressure: "Blood Pressure",
+  skinThickness: "Skin Thickness",
+  insulin: "Insulin",
+  bmi: "BMI",
+  age: "Age",
+  diabetesPedigree: "Diabetes Pedigree",
 
-    healthTipText:
-      "Stay hydrated, exercise regularly, and get enough sleep for better health.",
+  infectionProbability: "Infection probability",
+  viewReport: "View Report",
+  date: "Date",
+  action: "Actions",
 
-    lastDoctorContact: "Last Doctor Contact",
-    lastDoctorContactDesc: "Your most recent consultation appointment",
-    doctorCardTitle: "Your Doctor",
-    doctorCardText:
-      "The last connected doctor will appear here once consultation data becomes available.",
-    openConsultations: "Open Consultations"
-  },
+  healthTipText:
+    "Stay hydrated, exercise regularly, and get enough sleep for better health.",
+
+  lastDoctorContact: "Last Doctor Contact",
+  lastDoctorContactDesc: "Your most recent consultation appointment",
+  doctorCardTitle: "Your Doctor",
+  doctorCardText:
+    "The last connected doctor will appear here once consultation data becomes available.",
+  openConsultations: "Open Consultations",
+
+  help: "Help",
+  logout: "Log out",
+  logoutError: "Failed to log out",
+
+  last7Days: "Last 7 days",
+  last30Days: "Last 30 days",
+
+  riskTooltip: "Risk",
+  valueLabel: "Value",
+
+  weeklyAverage: "Weekly Average",
+  monthlyAverage: "Monthly Average",
+
+  reportsThisWeek: "Reports This Week",
+  reportsThisMonth: "Reports This Month",
+
+  highestWeeklyRisk: "Highest Weekly Risk",
+  highestMonthlyRisk: "Highest Monthly Risk",
+
+  noWeeklyReportsTitle: "No weekly reports",
+  noMonthlyReportsTitle: "No monthly reports",
+
+  noWeeklyReportsDesc: "There are no saved analyses in the last 7 days.",
+  noMonthlyReportsDesc: "There are no saved analyses in the last 30 days.",
+
+  chartShortPregnancies: "Preg",
+  chartShortGlucose: "Glucose",
+  chartShortBloodPressure: "BP",
+  chartShortSkinThickness: "Skin",
+  chartShortInsulin: "Insulin",
+  chartShortBmi: "BMI",
+  chartShortDiabetesPedigree: "DPF",
+  chartShortAge: "Age"
+},
 
   report: {
     title: "Preliminary Analysis Report",
@@ -173,6 +214,7 @@ const en = {
     profileImageAlt: "Profile picture",
     changePhoto: "Change photo",
     removePhoto: "Remove photo",
+    editPassword: "Edit Password",
 
     firstName: "First Name",
     lastName: "Last Name",
@@ -250,39 +292,39 @@ const en = {
   },
 
   chatBot: {
- title: "AI Medical Assistant",
-  connectedToLastPrediction: "Connected to your latest analysis",
-  generalMode: "General mode",
+    title: "AI Medical Assistant",
+    connectedToLastPrediction: "Connected to your latest analysis",
+    generalMode: "General mode",
 
-  welcomeInitial: "Welcome, I’m your smart medical assistant.",
-  welcomeFollowUp:
-    "I can help answer your questions about your general health and diabetes.",
+    welcomeInitial: "Welcome, I’m your smart medical assistant.",
+    welcomeFollowUp:
+      "I can help answer your questions about your general health and diabetes.",
 
-  floatingMessage1: "Welcome, I’m your smart medical assistant.",
-  floatingMessage2:
-    "I can help answer your questions about your general health and diabetes.",
+    floatingMessage1: "Welcome, I’m your smart medical assistant.",
+    floatingMessage2:
+      "I can help answer your questions about your general health and diabetes.",
 
-  typing: "Typing...",
-  inputPlaceholder: "Type your question here...",
-  disclaimer:
-    "This is an AI assistant and does not replace consultation with a medical specialist.",
-  fallbackError:
-    "Sorry, there is currently a technical issue. Please try again later or consult a doctor.",
-  temporarilyDisabled: "(Chatbot is temporarily disabled)",
-  unavailableToast: "Chatbot is currently unavailable",
-  openAriaLabel: "Open chat assistant",
-  minimizeAriaLabel: "Minimize chat",
-  closeAriaLabel: "Close chat",
-  closeHintAriaLabel: "Close hint",
-  fallbackResponses: {
-    why: "The percentage depends on several factors such as glucose, BMI, age, and family history.",
-    how: "It works by analyzing your medical data and comparing it with thousands of similar cases.",
-    serious:
-      "Risk level is determined based on the percentage. If it is above 50%, it is recommended to consult a doctor.",
-    treatment:
-      "The main steps are a healthy diet, regular exercise, and follow-up with a doctor."
-  },
-  sendAriaLabel: "Send message"
+    typing: "Typing...",
+    inputPlaceholder: "Type your question here...",
+    disclaimer:
+      "This is an AI assistant and does not replace consultation with a medical specialist.",
+    fallbackError:
+      "Sorry, there is currently a technical issue. Please try again later or consult a doctor.",
+    temporarilyDisabled: "(Chatbot is temporarily disabled)",
+    unavailableToast: "Chatbot is currently unavailable",
+    openAriaLabel: "Open chat assistant",
+    minimizeAriaLabel: "Minimize chat",
+    closeAriaLabel: "Close chat",
+    closeHintAriaLabel: "Close hint",
+    fallbackResponses: {
+      why: "The percentage depends on several factors such as glucose, BMI, age, and family history.",
+      how: "It works by analyzing your medical data and comparing it with thousands of similar cases.",
+      serious:
+        "Risk level is determined based on the percentage. If it is above 50%, it is recommended to consult a doctor.",
+      treatment:
+        "The main steps are a healthy diet, regular exercise, and follow-up with a doctor."
+    },
+    sendAriaLabel: "Send message"
   },
 
   faqs: "FAQs",
@@ -402,6 +444,25 @@ const en = {
     egypt: "Egypt"
   },
 
+trash: {
+  title: "Recently Deleted",
+  subtitle: "You can restore reports at any time",
+actions: "Actions",
+restoreError: "An error occurred while restoring the report",
+  deletedReports: "Deleted Reports",
+  backToDashboard: "Back to Dashboard",
+
+  emptyTitle: "No deleted reports",
+  emptyDescription: "Deleted reports will appear here",
+latestDeletedReport: "Latest deleted report",
+  report: "Report",
+  glucose: "Glucose",
+  date: "Date",
+
+  restore: "Restore",
+  restoreSuccess: "Report restored successfully"
+},
+
   authPage: {
     secureAccess: "Secure Access",
     loginSubtitle: "Log in to your account",
@@ -410,6 +471,8 @@ const en = {
     signupTab: "Sign Up",
     email: "Email",
     password: "Password",
+      orContinueWith: "Or login with",
+  forgotPassword: "Forgot your password?",
     processing: "Processing...",
     loginButton: "Login",
     signupButton: "Create Account",
@@ -455,6 +518,7 @@ const en = {
     newTest: "Start New Test",
     loading: "Loading reports...",
     emptyTitle: "No previous reports",
+    riskLevel: "Risk Level",
     emptySubtitle: "Start your first diabetes analysis now",
     startAnalysis: "Start Analysis",
     totalReports: "Total Reports",
@@ -476,41 +540,66 @@ const en = {
   },
 
   consultationsPage: {
-    title: "Book an Online Consultation",
-    subtitle:
-      "Connect with certified doctors for expert guidance after your AI health report.",
-    illustrationText: "Doctor consultation illustration",
-    bookingSection: "Booking Section",
-    specialization: "Doctor Specialization",
-    timeSlots: "Available Time Slots",
-    confirm: "Confirm Appointment",
-    upcoming: "Upcoming Appointments",
-    joinCall: "Join Call",
-    upcomingStatus: "Upcoming",
-    cancelledStatus: "Cancelled",
-    reschedule: "Reschedule",
-    cancel: "Cancel",
-    rescheduleTitle: "Reschedule Appointment",
-    newDate: "New Date",
-    newTime: "New Time",
-    selectNewTime: "Select new time",
-    save: "Save Changes",
-    selectRequired: "Please select all required fields",
-    selectValidSpecialization: "Please select a valid specialization",
-    slotBooked: "This appointment slot is already booked",
-    confirmed: "Appointment confirmed!",
-    selectNewDateTime: "Please select the new date and time",
-    newSlotBooked: "This new slot is already booked",
-    generalPractitioner: "General Practitioner",
-    cardiologist: "Cardiologist",
-    dermatologist: "Dermatologist",
-    neurologist: "Neurologist",
-    time1000: "10:00 AM",
-    time1100: "11:00 AM",
-    time1400: "2:00 PM",
-    time1500: "3:00 PM",
-    time1600: "4:00 PM"
-  },
+  title: "Book an Online Consultation",
+  subtitle:
+    "Connect with certified doctors for expert guidance after your AI health report.",
+  illustrationText: "Doctor consultation illustration",
+  bookingSection: "Booking Section",
+  specialization: "Doctor Specialization",
+  timeSlots: "Available Time Slots",
+  confirm: "Confirm Appointment",
+  upcoming: "Upcoming Appointments",
+  joinCall: "Join Call",
+  upcomingStatus: "Upcoming",
+  cancelledStatus: "Cancelled",
+  reschedule: "Reschedule",
+  cancel: "Cancel",
+  rescheduleTitle: "Reschedule Appointment",
+  newDate: "New Date",
+  newTime: "New Time",
+  selectNewTime: "Select new time",
+  save: "Save Changes",
+  selectRequired: "Please select all required fields",
+  selectValidSpecialization: "Please select a valid specialization",
+  slotBooked: "This appointment slot is already booked",
+  confirmed: "Appointment confirmed!",
+  selectNewDateTime: "Please select the new date and time",
+  newSlotBooked: "This new slot is already booked",
+
+  joinToast: "Joining {{doctor}}'s consultation...",
+  rescheduleSuccess: "Appointment with {{doctor}} rescheduled successfully",
+  cancelToast: "{{doctor}}'s appointment cancelled",
+
+  generalPractitioner: "General Practitioner",
+  cardiologist: "Cardiologist",
+  dermatologist: "Dermatologist",
+  neurologist: "Neurologist",
+
+  time1000: "10:00 AM",
+  time1100: "11:00 AM",
+  time1400: "2:00 PM",
+  time1500: "3:00 PM",
+  time1600: "4:00 PM",
+
+  doctors: {
+    general: {
+      name: "Dr. Emily Carter",
+      specialty: "General Practitioner"
+    },
+    cardio: {
+      name: "Dr. David Lee",
+      specialty: "Cardiologist"
+    },
+    derma: {
+      name: "Dr. Sophia Rodriguez",
+      specialty: "Dermatologist"
+    },
+    neuro: {
+      name: "Dr. Michael Adams",
+      specialty: "Neurologist"
+    }
+  }
+},
 
   diagnosisWizard: {
     backHome: "Back to Home",

@@ -1,6 +1,6 @@
 // src/pages/Auth.tsx
 import { useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,8 +23,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, Lock, User, AlertCircle } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Shared/Header";
@@ -36,26 +37,26 @@ export default function Auth() {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
 
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const loginSchema = z.object({
     email: z
       .string()
-      .email(t("authPage.validation.invalidEmail"))
-      .min(1, t("authPage.validation.emailRequired")),
+      .min(1, t("authPage.validation.emailRequired"))
+      .email(t("authPage.validation.invalidEmail")),
     password: z.string().min(1, t("authPage.validation.passwordRequired")),
   });
 
   const signupSchema = z
     .object({
-      firstName: z
-        .string()
-        .min(2, t("authPage.validation.firstNameMin")),
-      lastName: z
-        .string()
-        .min(2, t("authPage.validation.lastNameMin")),
+      firstName: z.string().min(2, t("authPage.validation.firstNameMin")),
+      lastName: z.string().min(2, t("authPage.validation.lastNameMin")),
       email: z
         .string()
-        .email(t("authPage.validation.invalidEmail"))
-        .min(1, t("authPage.validation.emailRequired")),
+        .min(1, t("authPage.validation.emailRequired"))
+        .email(t("authPage.validation.invalidEmail")),
       password: z
         .string()
         .min(8, t("authPage.validation.passwordMin"))
@@ -83,14 +84,31 @@ export default function Auth() {
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
+    mode: "onTouched",
+    reValidateMode: "onChange",
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    mode: "onTouched",
+    reValidateMode: "onChange",
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
   const onLoginSubmit = async (values: LoginFormValues) => {
     setLocalError(null);
+    clearError();
+
     try {
       await login(values.email, values.password);
       toast.success(t("authPage.loginSuccess"));
@@ -102,25 +120,16 @@ export default function Auth() {
     }
   };
 
-  const signupForm = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-
   const onSignupSubmit = async (values: SignupFormValues) => {
     setLocalError(null);
+    clearError();
+
     try {
       await register(
         values.email,
         values.password,
         values.firstName,
-        values.lastName,
+        values.lastName
       );
       toast.success(t("authPage.signupSuccess"));
       navigate("/dashboard");
@@ -135,6 +144,8 @@ export default function Auth() {
     setSearchParams({ tab: value });
     setLocalError(null);
     clearError();
+    loginForm.clearErrors();
+    signupForm.clearErrors();
   };
 
   return (
@@ -144,26 +155,28 @@ export default function Auth() {
     >
       <Header variant="default" />
 
-      <main className="flex-1 container mx-auto px-4 py-12">
+      <main className="flex-1 container mx-auto px-4 pt-24 md:pt-28 pb-12">
         <div className="max-w-md mx-auto">
-          <Card className="border-2 shadow-xl">
-            <CardHeader className="text-center pb-2">
+          <Card className="overflow-hidden rounded-[32px] border border-border/60 bg-card shadow-md">
+            <CardHeader className="text-center pb-3 pt-8">
               <div className="flex justify-center mb-4">
-                <div className="p-3 bg-primary/10 rounded-full">
-                  <Lock className="h-8 w-8 text-primary" />
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <Lock className="h-9 w-9 text-primary" />
                 </div>
               </div>
-              <CardTitle className="text-2xl font-bold">
+
+              <CardTitle className="text-3xl font-bold">
                 {t("authPage.secureAccess")}
               </CardTitle>
-              <CardDescription>
+
+              <CardDescription className="text-base mt-1">
                 {activeTab === "login"
                   ? t("authPage.loginSubtitle")
                   : t("authPage.signupSubtitle")}
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 px-6 md:px-8 pb-8">
               {(localError || error) && (
                 <div className="mb-6">
                   <ErrorDisplay
@@ -177,16 +190,23 @@ export default function Auth() {
               )}
 
               <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login">
+                <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted p-1 h-12 mb-6">
+                  <TabsTrigger
+                    value="login"
+                    className="rounded-full data-[state=active]:shadow-sm"
+                  >
                     {t("authPage.loginTab")}
                   </TabsTrigger>
-                  <TabsTrigger value="signup">
+
+                  <TabsTrigger
+                    value="signup"
+                    className="rounded-full data-[state=active]:shadow-sm"
+                  >
                     {t("authPage.signupTab")}
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="login" className="space-y-4 mt-6">
+                <TabsContent value="login" className="space-y-4 mt-0">
                   <Form {...loginForm}>
                     <form
                       onSubmit={loginForm.handleSubmit(onLoginSubmit)}
@@ -199,22 +219,13 @@ export default function Auth() {
                           <FormItem>
                             <FormLabel>{t("authPage.email")}</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <Mail
-                                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                                    isArabic ? "right-3" : "left-3"
-                                  }`}
-                                />
-                                <Input
-                                  type="email"
-                                  placeholder="your@email.com"
-                                  className={
-                                    isArabic ? "pr-10 text-left" : "pl-10 text-left"
-                                  }
-                                  dir="ltr"
-                                  {...field}
-                                />
-                              </div>
+                              <Input
+                                type="email"
+                                placeholder="your@email.com"
+                                className="h-14 rounded-full border-0 bg-muted/60 px-4 shadow-none text-left focus-visible:ring-1 focus-visible:ring-primary"
+                                dir="ltr"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -229,20 +240,26 @@ export default function Auth() {
                             <FormLabel>{t("authPage.password")}</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Lock
-                                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                                    isArabic ? "right-3" : "left-3"
-                                  }`}
-                                />
                                 <Input
-                                  type="password"
+                                  type={showLoginPassword ? "text" : "password"}
                                   placeholder="••••••••"
-                                  className={
-                                    isArabic ? "pr-10 text-left" : "pl-10 text-left"
-                                  }
+                                  className="h-14 rounded-full border-0 bg-muted/60 pl-4 pr-14 shadow-none text-left focus-visible:ring-1 focus-visible:ring-primary"
                                   dir="ltr"
                                   {...field}
                                 />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowLoginPassword((prev) => !prev)
+                                  }
+                                  className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                >
+                                  {showLoginPassword ? (
+                                    <FiEyeOff size={20} />
+                                  ) : (
+                                    <FiEye size={20} />
+                                  )}
+                                </button>
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -250,9 +267,18 @@ export default function Auth() {
                         )}
                       />
 
+                      <div className={isArabic ? "text-left" : "text-right"}>
+                        <Link
+                          to="/forgot-password"
+                          className="text-sm font-medium text-primary hover:underline"
+                        >
+                          {t("authPage.forgotPassword")}
+                        </Link>
+                      </div>
+
                       <Button
                         type="submit"
-                        className="w-full"
+                        className="w-full h-14 rounded-full text-base font-medium"
                         disabled={isLoading}
                         size="lg"
                       >
@@ -272,10 +298,33 @@ export default function Auth() {
                     </form>
                   </Form>
 
-                  <div className="text-center text-sm text-muted-foreground">
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="bg-card px-3 text-muted-foreground">
+                        {t("authPage.orContinueWith")}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="w-full h-14 rounded-full"
+                  >
+                    <FaGoogle
+                      className={isArabic ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"}
+                    />
+                    Gmail
+                  </Button>
+
+                  <div className="text-center text-sm text-muted-foreground pt-1">
                     <p>
                       {t("authPage.noAccount")}{" "}
                       <button
+                        type="button"
                         onClick={() => handleTabChange("signup")}
                         className="text-primary hover:underline font-semibold"
                       >
@@ -285,7 +334,7 @@ export default function Auth() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="signup" className="space-y-4 mt-6">
+                <TabsContent value="signup" className="space-y-4 mt-0">
                   <Form {...signupForm}>
                     <form
                       onSubmit={signupForm.handleSubmit(onSignupSubmit)}
@@ -298,21 +347,14 @@ export default function Auth() {
                           <FormItem>
                             <FormLabel>{t("authPage.firstName")}</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <User
-                                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                                    isArabic ? "right-3" : "left-3"
-                                  }`}
-                                />
-                                <Input
-                                  placeholder={t("authPage.firstNamePlaceholder")}
-                                  className={
-                                    isArabic ? "pr-10 text-right" : "pl-10 text-left"
-                                  }
-                                  dir={isArabic ? "rtl" : "ltr"}
-                                  {...field}
-                                />
-                              </div>
+                              <Input
+                                placeholder={t("authPage.firstNamePlaceholder")}
+                                className={`h-14 rounded-full border-0 bg-muted/60 px-4 shadow-none focus-visible:ring-1 focus-visible:ring-primary ${
+                                  isArabic ? "text-right" : "text-left"
+                                }`}
+                                dir={isArabic ? "rtl" : "ltr"}
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -326,21 +368,14 @@ export default function Auth() {
                           <FormItem>
                             <FormLabel>{t("authPage.lastName")}</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <User
-                                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                                    isArabic ? "right-3" : "left-3"
-                                  }`}
-                                />
-                                <Input
-                                  placeholder={t("authPage.lastNamePlaceholder")}
-                                  className={
-                                    isArabic ? "pr-10 text-right" : "pl-10 text-left"
-                                  }
-                                  dir={isArabic ? "rtl" : "ltr"}
-                                  {...field}
-                                />
-                              </div>
+                              <Input
+                                placeholder={t("authPage.lastNamePlaceholder")}
+                                className={`h-14 rounded-full border-0 bg-muted/60 px-4 shadow-none focus-visible:ring-1 focus-visible:ring-primary ${
+                                  isArabic ? "text-right" : "text-left"
+                                }`}
+                                dir={isArabic ? "rtl" : "ltr"}
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -354,22 +389,13 @@ export default function Auth() {
                           <FormItem>
                             <FormLabel>{t("authPage.email")}</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <Mail
-                                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                                    isArabic ? "right-3" : "left-3"
-                                  }`}
-                                />
-                                <Input
-                                  type="email"
-                                  placeholder="your@email.com"
-                                  className={
-                                    isArabic ? "pr-10 text-left" : "pl-10 text-left"
-                                  }
-                                  dir="ltr"
-                                  {...field}
-                                />
-                              </div>
+                              <Input
+                                type="email"
+                                placeholder="your@email.com"
+                                className="h-14 rounded-full border-0 bg-muted/60 px-4 shadow-none text-left focus-visible:ring-1 focus-visible:ring-primary"
+                                dir="ltr"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -384,20 +410,26 @@ export default function Auth() {
                             <FormLabel>{t("authPage.password")}</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Lock
-                                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                                    isArabic ? "right-3" : "left-3"
-                                  }`}
-                                />
                                 <Input
-                                  type="password"
+                                  type={showSignupPassword ? "text" : "password"}
                                   placeholder="••••••••"
-                                  className={
-                                    isArabic ? "pr-10 text-left" : "pl-10 text-left"
-                                  }
+                                  className="h-14 rounded-full border-0 bg-muted/60 pl-4 pr-14 shadow-none text-left focus-visible:ring-1 focus-visible:ring-primary"
                                   dir="ltr"
                                   {...field}
                                 />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowSignupPassword((prev) => !prev)
+                                  }
+                                  className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                >
+                                  {showSignupPassword ? (
+                                    <FiEyeOff size={20} />
+                                  ) : (
+                                    <FiEye size={20} />
+                                  )}
+                                </button>
                               </div>
                             </FormControl>
                             <FormDescription className="text-xs">
@@ -413,23 +445,33 @@ export default function Auth() {
                         name="confirmPassword"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t("authPage.confirmPassword")}</FormLabel>
+                            <FormLabel>
+                              {t("authPage.confirmPassword")}
+                            </FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Lock
-                                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                                    isArabic ? "right-3" : "left-3"
-                                  }`}
-                                />
                                 <Input
-                                  type="password"
-                                  placeholder="••••••••"
-                                  className={
-                                    isArabic ? "pr-10 text-left" : "pl-10 text-left"
+                                  type={
+                                    showConfirmPassword ? "text" : "password"
                                   }
+                                  placeholder="••••••••"
+                                  className="h-14 rounded-full border-0 bg-muted/60 pl-4 pr-14 shadow-none text-left focus-visible:ring-1 focus-visible:ring-primary"
                                   dir="ltr"
                                   {...field}
                                 />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowConfirmPassword((prev) => !prev)
+                                  }
+                                  className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                >
+                                  {showConfirmPassword ? (
+                                    <FiEyeOff size={20} />
+                                  ) : (
+                                    <FiEye size={20} />
+                                  )}
+                                </button>
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -439,7 +481,7 @@ export default function Auth() {
 
                       <Button
                         type="submit"
-                        className="w-full"
+                        className="w-full h-14 rounded-full text-base font-medium"
                         disabled={isLoading}
                         size="lg"
                       >
@@ -459,10 +501,11 @@ export default function Auth() {
                     </form>
                   </Form>
 
-                  <div className="text-center text-sm text-muted-foreground">
+                  <div className="text-center text-sm text-muted-foreground pt-1">
                     <p>
                       {t("authPage.haveAccount")}{" "}
                       <button
+                        type="button"
                         onClick={() => handleTabChange("login")}
                         className="text-primary hover:underline font-semibold"
                       >
@@ -472,19 +515,8 @@ export default function Auth() {
                   </div>
                 </TabsContent>
               </Tabs>
-
-              <Alert className="mt-6 border-blue-500 bg-blue-50">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800 text-sm mr-2">
-                  {t("authPage.securityNotice")}
-                </AlertDescription>
-              </Alert>
             </CardContent>
           </Card>
-
-          <div className="text-center mt-6 text-sm text-muted-foreground">
-            <p>{t("authPage.footerNote")}</p>
-          </div>
         </div>
       </main>
 

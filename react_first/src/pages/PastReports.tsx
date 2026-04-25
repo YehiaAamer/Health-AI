@@ -1,4 +1,3 @@
-// src/pages/PastReports.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,12 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, ArrowRight, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  AlertTriangle,
+  Trash2,
+  FileText,
+  CalendarDays,
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { useTranslation } from "react-i18next";
 import { useIsVisible } from "@/hooks/useIsVisible";
+import { useTrash } from "@/contexts/TrashContext";
 
 interface Prediction {
   id: number;
@@ -30,17 +39,27 @@ interface Prediction {
   created_at: string;
 }
 
+const DESKTOP_HEADER_HEIGHT = 72;
+
 export default function PastReports() {
   const { user, isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
+  const { addToTrash, deletedIds } = useTrash();
   const isArabic = i18n.language === "ar";
 
   const heroRef = useRef(null);
+  const contentRef = useRef(null);
+
   const heroVisible = useIsVisible(heroRef);
+  const contentVisible = useIsVisible(contentRef);
 
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
+
+  const REPORTS_PER_PAGE = 7;
 
   useEffect(() => {
     const fetchPredictions = async () => {
@@ -55,7 +74,11 @@ export default function PastReports() {
           method: "GET",
         });
 
-        setPredictions(data.predictions || []);
+        setPredictions(
+          (data.predictions || []).filter(
+            (item) => !deletedIds.includes(item.id)
+          )
+        );
 
         if (data.predictions && data.predictions.length === 0) {
           toast.info(t("pastReportsPage.noReportsToast"));
@@ -72,20 +95,26 @@ export default function PastReports() {
     if (isAuthenticated && user) {
       fetchPredictions();
     }
-  }, [isAuthenticated, user, t]);
+  }, [isAuthenticated, user, t, deletedIds]);
+
+  const handleDeletePrediction = (prediction: Prediction) => {
+    if (deletingIds.includes(prediction.id)) return;
+
+    setDeletingIds((prev) => [...prev, prediction.id]);
+
+    window.setTimeout(() => {
+      addToTrash(prediction);
+      setPredictions((prev) => prev.filter((item) => item.id !== prediction.id));
+      setDeletingIds((prev) => prev.filter((id) => id !== prediction.id));
+      toast.success(t("dashboard.deleteSuccess"));
+    }, 300);
+  };
 
   const formatNumber = (
     value: number,
     options?: Intl.NumberFormatOptions
   ) => {
     return value.toLocaleString(isArabic ? "ar-EG" : "en-US", options);
-  };
-
-  const formatValue = (
-    value?: number | null,
-    options?: Intl.NumberFormatOptions
-  ) => {
-    return value != null ? formatNumber(value, options) : "--";
   };
 
   const normalizeRiskLevel = (riskLevel?: string) => {
@@ -146,16 +175,70 @@ export default function PastReports() {
   const getRiskBadgeColor = (riskLevel: string) => {
     switch (normalizeRiskLevel(riskLevel)) {
       case "low":
-        return "bg-green-100 text-green-800";
+        return "border-green-200 bg-green-100 text-green-700 hover:border-green-200 hover:bg-green-100 hover:text-green-700";
       case "medium":
-        return "bg-yellow-100 text-yellow-800";
+        return "border-yellow-200 bg-yellow-100 text-yellow-700 hover:border-yellow-200 hover:bg-yellow-100 hover:text-yellow-700";
       case "high":
-        return "bg-orange-100 text-orange-800";
+        return "border-orange-200 bg-orange-100 text-orange-700 hover:border-orange-200 hover:bg-orange-100 hover:text-orange-700";
       case "veryHigh":
-        return "bg-red-100 text-red-800";
+        return "border-red-200 bg-red-100 text-red-700 hover:border-red-200 hover:bg-red-100 hover:text-red-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "border-gray-200 bg-gray-100 text-gray-700 hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700";
     }
+  };
+
+  const getProbabilityTone = () => {
+    return {
+      wrap: "bg-primary/10",
+      icon: "text-primary",
+    };
+  };
+
+  const getTopRiskIndicators = (prediction: Prediction) => {
+    const indicators = [
+      {
+        key: "pregnancies",
+        label: t("dashboard.pregnancies"),
+        value: prediction.pregnancies,
+      },
+      {
+        key: "glucose",
+        label: t("dashboard.glucose"),
+        value: prediction.glucose,
+      },
+      {
+        key: "blood_pressure",
+        label: t("dashboard.bloodPressure"),
+        value: prediction.blood_pressure,
+      },
+      {
+        key: "skin_thickness",
+        label: t("dashboard.skinThickness"),
+        value: prediction.skin_thickness,
+      },
+      {
+        key: "insulin",
+        label: t("dashboard.insulin"),
+        value: prediction.insulin,
+      },
+      {
+        key: "bmi",
+        label: t("dashboard.bmi"),
+        value: Number(prediction.bmi),
+      },
+      {
+        key: "diabetes_pedigree_function",
+        label: t("dashboard.diabetesPedigree"),
+        value: Number(prediction.diabetes_pedigree_function),
+      },
+      {
+        key: "age",
+        label: t("dashboard.age"),
+        value: prediction.age,
+      },
+    ];
+
+    return indicators.sort((a, b) => b.value - a.value).slice(0, 3);
   };
 
   const sortedPredictions = useMemo(() => {
@@ -174,6 +257,30 @@ export default function PastReports() {
     );
   }, [sortedPredictions]);
 
+  const latestDate = sortedPredictions[0]
+    ? new Date(sortedPredictions[0].created_at).toLocaleDateString(
+        isArabic ? "ar-SA" : "en-US"
+      )
+    : "--";
+
+  const totalPages = Math.ceil(sortedPredictions.length / REPORTS_PER_PAGE);
+
+  const paginatedPredictions = useMemo(() => {
+    const startIndex = (currentPage - 1) * REPORTS_PER_PAGE;
+    const endIndex = startIndex + REPORTS_PER_PAGE;
+    return sortedPredictions.slice(startIndex, endIndex);
+  }, [sortedPredictions, currentPage]);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deletedIds.length]);
+
   if (!isAuthenticated) {
     return (
       <div
@@ -181,7 +288,14 @@ export default function PastReports() {
         dir={isArabic ? "rtl" : "ltr"}
       >
         <Header variant="dashboard" />
-        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+
+        <main
+          className="flex-1 container mx-auto px-4 flex items-center justify-center"
+          style={{
+            paddingTop: `${DESKTOP_HEADER_HEIGHT + 32}px`,
+            paddingBottom: "32px",
+          }}
+        >
           <Alert className="w-full max-w-md bg-yellow-50 border-yellow-200">
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-800">
@@ -189,6 +303,7 @@ export default function PastReports() {
             </AlertDescription>
           </Alert>
         </main>
+
         <Footer />
       </div>
     );
@@ -201,12 +316,15 @@ export default function PastReports() {
     >
       <Header variant="dashboard" />
 
-      <main className="flex-1">
+      <main
+        className="flex-1"
+        style={{ paddingTop: `${DESKTOP_HEADER_HEIGHT}px` }}
+      >
         <section className="border-b bg-background">
           <div className="container mx-auto px-4 py-8 md:py-10">
             <div
               ref={heroRef}
-              className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between transition-all duration-700 ease-out ${
+              className={`transition-all duration-700 ease-out ${
                 heroVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-10"
@@ -225,214 +343,471 @@ export default function PastReports() {
         </section>
 
         <div className="container mx-auto px-4 py-8">
-          {isLoading && (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  {t("pastReportsPage.loading")}
+          <div
+            ref={contentRef}
+            className={`transition-all duration-700 ease-out ${
+              contentVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
+            {isLoading && (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    {t("pastReportsPage.loading")}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {error && !isLoading && (
+              <Alert className="bg-red-50 border-red-200 mb-6">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!isLoading && !error && sortedPredictions.length === 0 && (
+              <Card className="p-12 text-center border-dashed shadow-sm">
+                <AlertTriangle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold mb-2">
+                  {t("pastReportsPage.emptyTitle")}
+                </h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  {t("pastReportsPage.emptySubtitle")}
                 </p>
-              </div>
-            </div>
-          )}
+              </Card>
+            )}
 
-          {error && !isLoading && (
-            <Alert className="bg-red-50 border-red-200 mb-6">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                {error}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {!isLoading && !error && sortedPredictions.length === 0 && (
-            <Card className="p-12 text-center border-dashed shadow-sm">
-              <AlertTriangle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">
-                {t("pastReportsPage.emptyTitle")}
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                {t("pastReportsPage.emptySubtitle")}
-              </p>
-            </Card>
-          )}
-
-          {!isLoading && !error && sortedPredictions.length > 0 && (
-            <div className="space-y-8">
-              <div className="grid md:grid-cols-3 gap-4">
-                <Card className="p-6 shadow-sm border-0 bg-background rounded-2xl">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {t("pastReportsPage.totalReports")}
-                    </p>
-                    <p className="text-4xl font-bold text-primary">
-                      {formatNumber(sortedPredictions.length)}
-                    </p>
-                  </div>
-                </Card>
-
-                <Card className="p-6 shadow-sm border-0 bg-background rounded-2xl">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {t("pastReportsPage.latestTest")}
-                    </p>
-                    <p className="text-xl font-semibold">
-                      {new Date(sortedPredictions[0].created_at).toLocaleDateString(
-                        isArabic ? "ar-SA" : "en-US"
-                      )}
-                    </p>
-                  </div>
-                </Card>
-
-                <Card className="p-6 shadow-sm border-0 bg-background rounded-2xl">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {t("pastReportsPage.average")}
-                    </p>
-                    <p className="text-4xl font-bold">
-                      {formatNumber(averageProbability, {
-                        minimumFractionDigits: 1,
-                        maximumFractionDigits: 1,
-                      })}
-                      %
-                    </p>
-                  </div>
-                </Card>
-              </div>
-
-              <div className="space-y-4">
-                {sortedPredictions.map((pred) => (
-                  <Card
-                    key={pred.id}
-                    className="p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border bg-background"
-                  >
-                    <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between mb-4">
-                      <div
-                        className={`flex-1 ${
-                          isArabic ? "text-right" : "text-left"
-                        }`}
-                      >
-                        <div
-                          className={`flex flex-wrap items-center gap-3 mb-2 ${
-                            isArabic ? "justify-end" : "justify-start"
-                          }`}
-                        >
-                          <h3 className="text-lg font-bold">
-                            {t("pastReportsPage.infectionProbability")}:{" "}
-                            {formatNumber(pred.probability, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                            %
-                          </h3>
-                          <Badge className={getRiskBadgeColor(pred.risk_level)}>
-                            {getLocalizedRiskLabel(pred.risk_level)}
-                          </Badge>
-                        </div>
-
-                        <p className="text-sm text-muted-foreground">
-                          {t("pastReportsPage.date")}:{" "}
-                          {new Date(pred.created_at).toLocaleDateString(
-                            isArabic ? "ar-SA" : "en-US"
-                          )}{" "}
-                          {new Date(pred.created_at).toLocaleTimeString(
-                            isArabic ? "ar-SA" : "en-US",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </p>
+            {!isLoading && !error && sortedPredictions.length > 0 && (
+              <div className="space-y-8">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Card className="p-5 shadow-sm border-0 bg-background rounded-3xl">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <FileText className="h-5 w-5 text-primary" />
                       </div>
-
-                      <Link
-                        to="/report"
-                        state={{
-                          formData: {
-                            pregnancies: pred.pregnancies,
-                            glucose: pred.glucose,
-                            bloodPressure: pred.blood_pressure,
-                            skinThickness: pred.skin_thickness,
-                            insulin: pred.insulin,
-                            bmi: pred.bmi,
-                            diabetesPedigreeFunction:
-                              pred.diabetes_pedigree_function,
-                            age: pred.age,
-                          },
-                          probability: pred.probability,
-                          riskLevel: pred.risk_level,
-                          message: pred.message,
-                          predictionId: pred.id,
-                        }}
-                      >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-w-[140px]"
-                        >
-                          {t("pastReportsPage.viewReport")}
-                          <ArrowRight
-                            className={`${
-                              isArabic ? "ml-2 rotate-180" : "mr-2"
-                            } h-4 w-4`}
-                          />
-                        </Button>
-                      </Link>
-                    </div>
-
-                    <div className="grid md:grid-cols-4 gap-4 pt-4 border-t">
-                      <div className={isArabic ? "text-right" : "text-left"}>
+                      <div>
                         <p className="text-xs text-muted-foreground mb-1">
-                          {t("pastReportsPage.pregnancies")}
+                          {t("pastReportsPage.totalReports")}
                         </p>
-                        <p className="font-medium">
-                          {formatValue(pred.pregnancies)}
-                        </p>
-                      </div>
-                      <div className={isArabic ? "text-right" : "text-left"}>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {t("pastReportsPage.glucose")}
-                        </p>
-                        <p className="font-medium">
-                          {formatValue(pred.glucose)} mg/dL
+                        <p className="text-3xl font-bold text-foreground">
+                          {formatNumber(sortedPredictions.length)}
                         </p>
                       </div>
-                      <div className={isArabic ? "text-right" : "text-left"}>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {t("pastReportsPage.bloodPressure")}
-                        </p>
-                        <p className="font-medium">
-                          {formatValue(pred.blood_pressure)} mmHg
-                        </p>
-                      </div>
-                      <div className={isArabic ? "text-right" : "text-left"}>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {t("pastReportsPage.bmi")}
-                        </p>
-                        <p className="font-medium">
-                          {formatValue(pred.bmi, {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 2,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`mt-4 pt-4 border-t ${
-                        isArabic ? "text-right" : "text-left"
-                      }`}
-                    >
-                      <p className="text-xs text-muted-foreground">
-                        {t("pastReportsPage.reportId")}: #
-                        {formatNumber(pred.id)}
-                      </p>
                     </div>
                   </Card>
-                ))}
+
+                  <Card className="p-5 shadow-sm border-0 bg-background rounded-3xl">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <CalendarDays className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t("pastReportsPage.latestTest")}
+                        </p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {latestDate}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-5 shadow-sm border-0 bg-background rounded-3xl">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Activity className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t("pastReportsPage.average")}
+                        </p>
+                        <p className="text-3xl font-bold text-foreground">
+                          {formatNumber(averageProbability, {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          })}
+                          %
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                <Card className="rounded-[26px] border bg-background p-5 md:p-6 shadow-sm">
+                  <div className="hidden lg:block overflow-x-auto">
+                    <div className="min-w-[1080px] overflow-hidden rounded-[22px] border">
+                      <div className="grid grid-cols-[2fr_1.45fr_1.05fr_.75fr_1.1fr] gap-4 bg-muted/30 px-5 py-4 text-sm font-semibold text-muted-foreground">
+                        <span className="text-start">
+                          {t("pastReportsPage.infectionProbability")}
+                        </span>
+                        <span className="text-start">
+                          {t("dashboard.riskIndicators")}
+                        </span>
+                        <span className="text-start whitespace-nowrap">
+                          {t("pastReportsPage.date")}
+                        </span>
+                        <span className="text-start whitespace-nowrap">
+                          {t("pastReportsPage.reportId")}
+                        </span>
+                        <span
+                          className={`whitespace-nowrap ${
+                            isArabic ? "text-left" : "text-right"
+                          }`}
+                        >
+                          {t("trash.actions")}
+                        </span>
+                      </div>
+
+                      {paginatedPredictions.map((pred) => {
+                        const tone = getProbabilityTone();
+                        const isDeleting = deletingIds.includes(pred.id);
+                        const topIndicators = getTopRiskIndicators(pred);
+
+                        return (
+                          <div
+                            key={pred.id}
+                            className={`grid grid-cols-[2fr_1.45fr_1.05fr_.75fr_1.1fr] gap-4 items-center px-5 py-5 border-t hover:bg-muted/10 transition-all duration-300 ease-out ${
+                              isDeleting
+                                ? "opacity-0 -translate-y-2 scale-[0.98] max-h-0 py-0 overflow-hidden"
+                                : "opacity-100 translate-y-0 scale-100"
+                            }`}
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${tone.wrap}`}
+                                >
+                                  <Activity className={`h-5 w-5 ${tone.icon}`} />
+                                </div>
+
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-semibold truncate text-lg">
+                                      {formatNumber(pred.probability, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}
+                                      %
+                                    </p>
+
+                                    <Badge
+                                      className={`border text-xs transition-none ${getRiskBadgeColor(
+                                        pred.risk_level
+                                      )}`}
+                                    >
+                                      {getLocalizedRiskLabel(pred.risk_level)}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="flex flex-col gap-1 text-sm">
+                                {topIndicators.map((indicator) => (
+                                  <div
+                                    key={indicator.key}
+                                    className="flex items-center gap-2 min-w-0"
+                                  >
+                                    <span className="font-medium text-foreground whitespace-nowrap">
+                                      {indicator.label}:
+                                    </span>
+                                    <span className="text-muted-foreground whitespace-nowrap">
+                                      {formatNumber(indicator.value)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="text-sm text-muted-foreground">
+                              <p className="whitespace-nowrap">
+                                {new Date(pred.created_at).toLocaleDateString(
+                                  isArabic ? "ar-SA" : "en-US"
+                                )}
+                              </p>
+
+                              <p className="mt-1 text-xs text-muted-foreground whitespace-nowrap">
+                                {new Date(pred.created_at).toLocaleTimeString(
+                                  isArabic ? "ar-EG" : "en-US",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  }
+                                )}
+                              </p>
+                            </div>
+
+                            <div>
+                              <div className="inline-flex rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary whitespace-nowrap">
+                                #{formatNumber(pred.id)}
+                              </div>
+                            </div>
+
+                            <div
+                              className={`flex items-center gap-2 ${
+                                isArabic ? "justify-start" : "justify-end"
+                              }`}
+                            >
+                              <Link
+                                to="/report"
+                                state={{
+                                  formData: {
+                                    pregnancies: pred.pregnancies,
+                                    glucose: pred.glucose,
+                                    bloodPressure: pred.blood_pressure,
+                                    skinThickness: pred.skin_thickness,
+                                    insulin: pred.insulin,
+                                    bmi: pred.bmi,
+                                    diabetesPedigreeFunction:
+                                      pred.diabetes_pedigree_function,
+                                    age: pred.age,
+                                  },
+                                  probability: pred.probability,
+                                  riskLevel: pred.risk_level,
+                                  message: pred.message,
+                                  predictionId: pred.id,
+                                }}
+                              >
+                                <Button
+                                  variant="ghost"
+                                  className="rounded-xl whitespace-nowrap h-10"
+                                  disabled={isDeleting}
+                                >
+                                  {t("pastReportsPage.viewReport")}
+                                </Button>
+                              </Link>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="rounded-xl h-10 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 active:scale-95"
+                                onClick={() => handleDeletePrediction(pred)}
+                                disabled={isDeleting}
+                                aria-label={t("dashboard.deleteReport")}
+                              >
+                                {isDeleting ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 lg:hidden">
+                    {paginatedPredictions.map((pred) => {
+                      const isDeleting = deletingIds.includes(pred.id);
+                      const topIndicators = getTopRiskIndicators(pred);
+
+                      return (
+                        <div
+                          key={pred.id}
+                          className={`rounded-[20px] border p-4 bg-background transition-all duration-300 ease-out ${
+                            isDeleting
+                              ? "opacity-0 translate-y-3 scale-[0.98]"
+                              : "opacity-100 translate-y-0 scale-100"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                              <Activity className="h-5 w-5 text-primary" />
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-semibold leading-snug">
+                                  {formatNumber(pred.probability, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                  %
+                                </p>
+
+                                <Badge
+                                  className={`border text-xs transition-none ${getRiskBadgeColor(
+                                    pred.risk_level
+                                  )}`}
+                                >
+                                  {getLocalizedRiskLabel(pred.risk_level)}
+                                </Badge>
+                              </div>
+
+                              <p className="mt-2 text-xs text-primary font-semibold">
+                                #{formatNumber(pred.id)}
+                              </p>
+
+                              <div className="mt-4 rounded-xl bg-muted/30 p-3">
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  {t("dashboard.riskIndicators")}
+                                </p>
+
+                                <div className="flex flex-col gap-1 text-sm">
+                                  {topIndicators.map((indicator) => (
+                                    <div
+                                      key={indicator.key}
+                                      className="flex items-center gap-2 min-w-0"
+                                    >
+                                      <span className="font-medium text-foreground whitespace-nowrap">
+                                        {indicator.label}:
+                                      </span>
+                                      <span className="text-muted-foreground whitespace-nowrap">
+                                        {formatNumber(indicator.value)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="mt-3 rounded-xl bg-muted/30 p-3">
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  {t("pastReportsPage.date")}
+                                </p>
+
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(pred.created_at).toLocaleDateString(
+                                    isArabic ? "ar-SA" : "en-US"
+                                  )}
+                                </p>
+
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  {new Date(pred.created_at).toLocaleTimeString(
+                                    isArabic ? "ar-EG" : "en-US",
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    }
+                                  )}
+                                </p>
+                              </div>
+
+                              <div className="mt-4 flex flex-col gap-2">
+                                <Link
+                                  to="/report"
+                                  state={{
+                                    formData: {
+                                      pregnancies: pred.pregnancies,
+                                      glucose: pred.glucose,
+                                      bloodPressure: pred.blood_pressure,
+                                      skinThickness: pred.skin_thickness,
+                                      insulin: pred.insulin,
+                                      bmi: pred.bmi,
+                                      diabetesPedigreeFunction:
+                                        pred.diabetes_pedigree_function,
+                                      age: pred.age,
+                                    },
+                                    probability: pred.probability,
+                                    riskLevel: pred.risk_level,
+                                    message: pred.message,
+                                    predictionId: pred.id,
+                                  }}
+                                >
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="rounded-xl w-full h-10"
+                                    disabled={isDeleting}
+                                  >
+                                    {t("pastReportsPage.viewReport")}
+                                  </Button>
+                                </Link>
+
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="rounded-xl w-full h-10 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                  onClick={() => handleDeletePrediction(pred)}
+                                  disabled={isDeleting}
+                                  aria-label={t("dashboard.deleteReport")}
+                                >
+                                  {isDeleting ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="rounded-xl"
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        aria-label="Previous page"
+                      >
+                        {isArabic ? (
+                          <ChevronRight className="h-4 w-4" />
+                        ) : (
+                          <ChevronLeft className="h-4 w-4" />
+                        )}
+                      </Button>
+
+                      {Array.from({ length: totalPages }, (_, index) => {
+                        const page = index + 1;
+                        const isActive = currentPage === page;
+
+                        return (
+                          <Button
+                            key={page}
+                            type="button"
+                            variant={isActive ? "default" : "outline"}
+                            className="h-9 min-w-9 rounded-xl px-3"
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page.toLocaleString(isArabic ? "ar-EG" : "en-US")}
+                          </Button>
+                        );
+                      })}
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="rounded-xl"
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                        aria-label="Next page"
+                      >
+                        {isArabic ? (
+                          <ChevronLeft className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </Card>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </main>
 

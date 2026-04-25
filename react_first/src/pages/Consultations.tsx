@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,6 +14,7 @@ import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useIsVisible } from "@/hooks/useIsVisible";
 
 type AppointmentStatus = "upcoming" | "joinable" | "cancelled";
 
@@ -27,27 +28,7 @@ type Appointment = {
   status?: AppointmentStatus;
 };
 
-const doctorBySpecialty: Record<
-  string,
-  { doctor: string; specialty: string }
-> = {
-  general: {
-    doctor: "Dr. Emily Carter",
-    specialty: "General Practitioner",
-  },
-  cardio: {
-    doctor: "Dr. David Lee",
-    specialty: "Cardiologist",
-  },
-  derma: {
-    doctor: "Dr. Sophia Rodriguez",
-    specialty: "Dermatologist",
-  },
-  neuro: {
-    doctor: "Dr. Michael Adams",
-    specialty: "Neurologist",
-  },
-};
+const DESKTOP_HEADER_HEIGHT = 72;
 
 const formatDateLocal = (selectedDate: Date) => {
   const year = selectedDate.getFullYear();
@@ -61,6 +42,36 @@ const Consultations = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
 
+  const heroRef = useRef(null);
+  const bookingRef = useRef(null);
+  const appointmentsRef = useRef(null);
+
+  const heroVisible = useIsVisible(heroRef);
+  const bookingVisible = useIsVisible(bookingRef);
+  const appointmentsVisible = useIsVisible(appointmentsRef);
+
+  const doctorBySpecialty: Record<
+    string,
+    { doctor: string; specialty: string }
+  > = {
+    general: {
+      doctor: t("consultationsPage.doctors.general.name"),
+      specialty: t("consultationsPage.doctors.general.specialty"),
+    },
+    cardio: {
+      doctor: t("consultationsPage.doctors.cardio.name"),
+      specialty: t("consultationsPage.doctors.cardio.specialty"),
+    },
+    derma: {
+      doctor: t("consultationsPage.doctors.derma.name"),
+      specialty: t("consultationsPage.doctors.derma.specialty"),
+    },
+    neuro: {
+      doctor: t("consultationsPage.doctors.neuro.name"),
+      specialty: t("consultationsPage.doctors.neuro.specialty"),
+    },
+  };
+
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [specialty, setSpecialty] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
@@ -72,24 +83,24 @@ const Consultations = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: 1,
-      doctor: "Dr. Emily Carter",
-      specialty: "General Practitioner",
+      doctor: t("consultationsPage.doctors.general.name"),
+      specialty: t("consultationsPage.doctors.general.specialty"),
       date: "2026-03-25",
       time: "14:00",
       image: "/placeholder.svg",
     },
     {
       id: 2,
-      doctor: "Dr. David Lee",
-      specialty: "Cardiologist",
+      doctor: t("consultationsPage.doctors.cardio.name"),
+      specialty: t("consultationsPage.doctors.cardio.specialty"),
       date: "2026-03-21",
       time: "10:00",
       image: "/placeholder.svg",
     },
     {
       id: 3,
-      doctor: "Dr. Sophia Rodriguez",
-      specialty: "Dermatologist",
+      doctor: t("consultationsPage.doctors.derma.name"),
+      specialty: t("consultationsPage.doctors.derma.specialty"),
       date: "2026-03-22",
       time: "16:30",
       image: "/placeholder.svg",
@@ -147,9 +158,7 @@ const Consultations = () => {
     if (!appointment) return;
 
     toast.success(
-      isArabic
-        ? `جارٍ الانضمام إلى استشارة ${appointment.doctor}...`
-        : `Joining ${appointment.doctor}'s consultation...`,
+      t("consultationsPage.joinToast", { doctor: appointment.doctor }),
     );
   };
 
@@ -202,9 +211,9 @@ const Consultations = () => {
     );
 
     toast.success(
-      isArabic
-        ? `تمت إعادة جدولة موعد ${currentAppointment.doctor} بنجاح`
-        : `Appointment with ${currentAppointment.doctor} rescheduled successfully`,
+      t("consultationsPage.rescheduleSuccess", {
+        doctor: currentAppointment.doctor,
+      }),
     );
 
     setReschedulingId(null);
@@ -233,9 +242,7 @@ const Consultations = () => {
     }
 
     toast.error(
-      isArabic
-        ? `تم إلغاء موعد ${appointment.doctor}`
-        : `${appointment.doctor}'s appointment cancelled`,
+      t("consultationsPage.cancelToast", { doctor: appointment.doctor }),
     );
   };
 
@@ -276,8 +283,16 @@ const Consultations = () => {
     >
       <Header variant="dashboard" />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
+      <main
+        className="flex-1 container mx-auto px-4 py-8"
+        style={{ paddingTop: `${DESKTOP_HEADER_HEIGHT + 32}px` }}
+      >
+        <div
+          ref={heroRef}
+          className={`text-center mb-12 transition-all duration-700 ease-out ${
+            heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {t("consultationsPage.title")}
           </h1>
@@ -286,7 +301,11 @@ const Consultations = () => {
           </p>
         </div>
 
-        <div className="flex justify-center mb-12">
+        <div
+          className={`flex justify-center mb-12 transition-all duration-700 ease-out delay-100 ${
+            heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <div className="w-full max-w-md bg-gradient-to-br from-primary/10 to-cyan-600/10 rounded-2xl p-8">
             <div className="bg-accent/50 rounded-lg p-8 flex items-center justify-center">
               <div className="text-center">
@@ -301,7 +320,12 @@ const Consultations = () => {
           </div>
         </div>
 
-        <Card className="p-8 mb-12 max-w-6xl mx-auto">
+        <Card
+          ref={bookingRef as any}
+          className={`p-8 mb-12 max-w-6xl mx-auto transition-all duration-700 ease-out delay-100 ${
+            bookingVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <h2
             className={`text-2xl font-bold mb-6 flex items-center gap-2 ${
               isArabic ? "justify-end" : ""
@@ -394,7 +418,14 @@ const Consultations = () => {
           </div>
         </Card>
 
-        <div className="max-w-6xl mx-auto">
+        <div
+          ref={appointmentsRef}
+          className={`max-w-6xl mx-auto transition-all duration-700 ease-out delay-200 ${
+            appointmentsVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-10"
+          }`}
+        >
           <h2 className="text-2xl font-bold mb-6">
             {t("consultationsPage.upcoming")}
           </h2>

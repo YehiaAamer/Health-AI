@@ -10,6 +10,8 @@ import { useTranslation } from "react-i18next";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 
+const DESKTOP_HEADER_HEIGHT = 72;
+
 const TermsOfService = () => {
   const { t, i18n } = useTranslation();
 
@@ -132,10 +134,14 @@ const TermsOfService = () => {
     >
       <Header />
 
-      <main className="flex-1 py-10 px-4 md:py-14">
+      <main
+        className="flex-1 px-4"
+        style={{
+          paddingTop: `${DESKTOP_HEADER_HEIGHT + 40}px`,
+          paddingBottom: "56px",
+        }}
+      >
         <div className="container mx-auto max-w-6xl">
-
-          {/* Header */}
           <div className="mb-8 pb-4 border-b">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               {t("terms.title")}
@@ -150,9 +156,8 @@ const TermsOfService = () => {
             </p>
           </div>
 
-          {/* Notice (رجعناه full width) */}
           <div className="mb-6 w-full rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 flex items-start gap-2 text-yellow-800 text-sm">
-            <AlertTriangle className="h-4 w-4 mt-0.5" />
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
             <p>
               <span className="font-semibold">
                 {t("terms.notice.title")}:
@@ -161,7 +166,6 @@ const TermsOfService = () => {
             </p>
           </div>
 
-          {/* Sections */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             {sections.map((section) => (
               <section
@@ -170,7 +174,7 @@ const TermsOfService = () => {
                 className="rounded-xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
               >
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
                     {section.icon}
                   </div>
 
@@ -216,7 +220,6 @@ const TermsOfService = () => {
             ))}
           </div>
 
-          {/* Contact */}
           <section className="mt-6 rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -237,7 +240,6 @@ const TermsOfService = () => {
               </a>
             </div>
           </section>
-
         </div>
       </main>
 

@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import LoadingDots from "@/components/Shared/LoadingDots";
-import { useLocation } from "react-router-dom";
 
 type GlobalLoaderContextType = {
   show: (autoHideMs?: number) => void;
@@ -17,14 +16,15 @@ const GlobalLoaderContext = createContext<GlobalLoaderContextType>({
 export const GlobalLoaderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [count, setCount] = useState(0);
   const timers = useRef<number[]>([]);
-  const location = useLocation();
 
   const show = useCallback((autoHideMs = 0) => {
     setCount((c) => c + 1);
+
     if (autoHideMs > 0) {
       const id = window.setTimeout(() => {
         setCount((c) => Math.max(0, c - 1));
       }, autoHideMs);
+
       timers.current.push(id);
     }
   }, []);
@@ -33,14 +33,6 @@ export const GlobalLoaderProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setCount((c) => Math.max(0, c - 1));
   }, []);
 
-  // On route change, show loader briefly
-  useEffect(() => {
-    // show for at least 600ms, hide afterwards automatically
-    show(800);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key]);
-
-  // cleanup any timers on unmount
   useEffect(() => {
     return () => {
       timers.current.forEach((t) => clearTimeout(t));

@@ -11,6 +11,8 @@ import { useTranslation } from "react-i18next";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 
+const DESKTOP_HEADER_HEIGHT = 72;
+
 const PrivacyPolicy = () => {
   const { t, i18n } = useTranslation();
 
@@ -120,9 +122,14 @@ const PrivacyPolicy = () => {
     >
       <Header />
 
-      <main className="flex-1 py-10 px-4 md:py-14">
+      <main
+        className="flex-1 px-4"
+        style={{
+          paddingTop: `${DESKTOP_HEADER_HEIGHT + 40}px`,
+          paddingBottom: "56px",
+        }}
+      >
         <div className="container mx-auto max-w-6xl">
-          {/* Header */}
           <div className="mb-8 pb-4 border-b">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               {t("privacy.title")}
@@ -137,7 +144,6 @@ const PrivacyPolicy = () => {
             </p>
           </div>
 
-          {/* Sections Grid */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             {sections.map((section) => (
               <section
@@ -146,12 +152,10 @@ const PrivacyPolicy = () => {
                 className="rounded-xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
               >
                 <div className="mb-4 flex items-center gap-3">
-                  {/* Icon */}
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     {section.icon}
                   </div>
 
-                  {/* Title */}
                   <h2 className="text-lg font-semibold text-foreground leading-snug">
                     {section.title}
                   </h2>
@@ -181,7 +185,6 @@ const PrivacyPolicy = () => {
               </section>
             ))}
 
-            {/* Contact */}
             <section className="rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
               <div className="flex h-full flex-col justify-between gap-5">
                 <div>

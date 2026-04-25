@@ -1,9 +1,7 @@
-// src/pages/EditProfile.tsx
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
@@ -12,6 +10,8 @@ import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+
+const DESKTOP_HEADER_HEIGHT = 72;
 
 export default function EditProfile() {
   const { t, i18n } = useTranslation();
@@ -200,7 +200,12 @@ export default function EditProfile() {
     >
       <Header variant="dashboard" />
 
-      <main className="flex-1">
+      <main
+        className="flex-1"
+        style={{
+          paddingTop: `${DESKTOP_HEADER_HEIGHT + 24}px`,
+        }}
+      >
         <div className="container mx-auto px-4 py-8 md:py-10">
           <div className="mx-auto max-w-4xl">
             <div className="mb-10 flex flex-col items-center text-center">
@@ -252,148 +257,146 @@ export default function EditProfile() {
               </p>
             </div>
 
-            <Card className="rounded-3xl border bg-card shadow-sm">
-              <form onSubmit={handleSubmit} className="px-6 py-6 md:px-8 md:py-8">
-                {error && (
-                  <Alert className="mb-6 border-red-200 bg-red-50 text-red-800">
-                    <p>{error}</p>
-                  </Alert>
-                )}
+            <form onSubmit={handleSubmit} className="md:px-8">
+              {error && (
+                <Alert className="mb-6 border-red-200 bg-red-50 text-red-800">
+                  <p>{error}</p>
+                </Alert>
+              )}
 
-                <div className="space-y-10">
-                  <div>
-                    <div className="mb-6">
-                      <h2 className="text-2xl font-semibold tracking-tight">
-                        {t("editProfile.title")}
-                      </h2>
-                    </div>
-
-                    <div className="divide-y rounded-2xl border">
-                      <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
-                        <div>
-                          <Label
-                            htmlFor="first_name"
-                            className="text-sm font-medium text-foreground"
-                          >
-                            {t("editProfile.firstName")}
-                          </Label>
-                        </div>
-                        <div>
-                          <Input
-                            id="first_name"
-                            name="first_name"
-                            value={formData.first_name}
-                            onChange={handleInputChange}
-                            placeholder={t("editProfile.placeholders.firstName")}
-                            className={`h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 ${
-                              isArabic ? "text-right" : "text-left"
-                            }`}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
-                        <div>
-                          <Label
-                            htmlFor="last_name"
-                            className="text-sm font-medium text-foreground"
-                          >
-                            {t("editProfile.lastName")}
-                          </Label>
-                        </div>
-                        <div>
-                          <Input
-                            id="last_name"
-                            name="last_name"
-                            value={formData.last_name}
-                            onChange={handleInputChange}
-                            placeholder={t("editProfile.placeholders.lastName")}
-                            className={`h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 ${
-                              isArabic ? "text-right" : "text-left"
-                            }`}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
-                        <div>
-                          <Label
-                            htmlFor="email"
-                            className="text-sm font-medium text-foreground"
-                          >
-                            {t("editProfile.email")}
-                          </Label>
-                        </div>
-                        <div>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder={t("editProfile.placeholders.email")}
-                            className="h-11 border-0 bg-transparent px-0 text-left shadow-none focus-visible:ring-0"
-                            dir="ltr"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
-                        <div>
-                          <Label
-                            htmlFor="phone"
-                            className="text-sm font-medium text-foreground"
-                          >
-                            {t("editProfile.phone")}
-                          </Label>
-                        </div>
-                        <div>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            type="tel"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            placeholder={t("editProfile.placeholders.phone")}
-                            className="h-11 border-0 bg-transparent px-0 text-left shadow-none focus-visible:ring-0"
-                            dir="ltr"
-                          />
-                        </div>
-                      </div>
-                    </div>
+              <div className="space-y-10">
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-semibold tracking-tight">
+                      {t("editProfile.title")}
+                    </h2>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center space-y-3">
-                    <Button
-                      type="submit"
-                      className="h-11 min-w-[180px] rounded-full px-6"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                          {t("editProfile.saving")}
-                        </>
-                      ) : (
-                        t("editProfile.saveChanges")
-                      )}
-                    </Button>
+                  <div className="divide-y rounded-2xl border bg-card shadow-sm">
+                    <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
+                      <div>
+                        <Label
+                          htmlFor="first_name"
+                          className="text-sm font-medium text-foreground"
+                        >
+                          {t("editProfile.firstName")}
+                        </Label>
+                      </div>
+                      <div>
+                        <Input
+                          id="first_name"
+                          name="first_name"
+                          value={formData.first_name}
+                          onChange={handleInputChange}
+                          placeholder={t("editProfile.placeholders.firstName")}
+                          className={`h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 ${
+                            isArabic ? "text-right" : "text-left"
+                          }`}
+                          required
+                        />
+                      </div>
+                    </div>
 
-                    <Button
-                      type="button"
-                      variant="link"
-                      className="px-0 text-center text-muted-foreground"
-                      onClick={() => navigate("/forgot-password")}
-                    >
-                      {t("editProfile.forgotPassword")}
-                    </Button>
+                    <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
+                      <div>
+                        <Label
+                          htmlFor="last_name"
+                          className="text-sm font-medium text-foreground"
+                        >
+                          {t("editProfile.lastName")}
+                        </Label>
+                      </div>
+                      <div>
+                        <Input
+                          id="last_name"
+                          name="last_name"
+                          value={formData.last_name}
+                          onChange={handleInputChange}
+                          placeholder={t("editProfile.placeholders.lastName")}
+                          className={`h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 ${
+                            isArabic ? "text-right" : "text-left"
+                          }`}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
+                      <div>
+                        <Label
+                          htmlFor="email"
+                          className="text-sm font-medium text-foreground"
+                        >
+                          {t("editProfile.email")}
+                        </Label>
+                      </div>
+                      <div>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder={t("editProfile.placeholders.email")}
+                          className="h-11 border-0 bg-transparent px-0 text-left shadow-none focus-visible:ring-0"
+                          dir="ltr"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 px-4 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:px-6">
+                      <div>
+                        <Label
+                          htmlFor="phone"
+                          className="text-sm font-medium text-foreground"
+                        >
+                          {t("editProfile.phone")}
+                        </Label>
+                      </div>
+                      <div>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder={t("editProfile.placeholders.phone")}
+                          className="h-11 border-0 bg-transparent px-0 text-left shadow-none focus-visible:ring-0"
+                          dir="ltr"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </form>
-            </Card>
+
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <Button
+                    type="submit"
+                    className="h-11 min-w-[180px] rounded-full px-6"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                        {t("editProfile.saving")}
+                      </>
+                    ) : (
+                      t("editProfile.saveChanges")
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="px-0 text-center text-muted-foreground"
+                    onClick={() => navigate("/change-password")}
+                  >
+                    {t("editProfile.editPassword")}
+                  </Button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </main>
