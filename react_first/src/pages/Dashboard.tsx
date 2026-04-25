@@ -513,6 +513,7 @@ const Dashboard = () => {
                   src={user.profile_picture}
                   alt={user?.first_name || user?.email || "Profile"}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <User className="h-5 w-5 text-white" />
@@ -707,14 +708,14 @@ const Dashboard = () => {
               aria-label="Toggle sidebar"
             >
               <ChevronDown
-                className={`h-5 w-5 transition-transform duration-300 ${
+                className={`h-5 w-5 transition-transform duration-200 ${
                   isSidebarOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
 
             <div
-              className={`overflow-hidden transition-all duration-300 ease-out ${
+              className={`overflow-hidden transition-[max-height,opacity,margin] duration-200 ease-out ${
                 isSidebarOpen
                   ? "max-h-[900px] opacity-100 mb-4"
                   : "max-h-0 opacity-0"
@@ -727,7 +728,7 @@ const Dashboard = () => {
           </div>
 
           <aside
-            className={`hidden xl:block fixed z-30 bg-background ${desktopSidebarSideClass} transition-all duration-300`}
+            className={`hidden xl:block fixed z-30 bg-background ${desktopSidebarSideClass} transition-[width] duration-200`}
             style={{
               top: `${DESKTOP_HEADER_HEIGHT}px`,
               bottom: 0,
@@ -739,7 +740,7 @@ const Dashboard = () => {
             }}
           >
             <div
-              className={`h-full overflow-y-auto transition-all duration-300 ${
+              className={`h-full overflow-y-auto transition-[padding] duration-200 ${
                 isDesktopSidebarCollapsed ? "px-2" : "px-4"
               }`}
             >
@@ -748,14 +749,14 @@ const Dashboard = () => {
           </aside>
 
           <div
-            className={`w-full min-w-0 space-y-5 transition-all duration-300 ${desktopContentOffsetClass}`}
+            className={`w-full min-w-0 space-y-5 transition-[padding] duration-200 ${desktopContentOffsetClass}`}
           >
             <div
               ref={heroRef}
-              className={`flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between pt-6 transition-all duration-700 ease-out delay-100 ${
+              className={`flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between pt-6 transform-gpu transition-opacity transition-transform duration-500 ease-out ${
                 heroVisible
                   ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-10"
+                  : "opacity-0 translate-y-6"
               }`}
             >
               <div className={isArabic ? "text-right" : "text-left"}>
@@ -812,10 +813,10 @@ const Dashboard = () => {
 
             <section
               ref={statsRef}
-              className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 transition-all duration-700 ease-out delay-200 ${
+              className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 transform-gpu transition-opacity transition-transform duration-500 ease-out ${
                 statsVisible
                   ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-10"
+                  : "opacity-0 translate-y-6"
               }`}
             >
               <Card className="rounded-[20px] border bg-card p-5 shadow-sm">
@@ -882,10 +883,10 @@ const Dashboard = () => {
 
             <section
               ref={analysesRef}
-              className={`grid grid-cols-1 gap-5 items-start transition-all duration-700 ease-out delay-300 ${
+              className={`grid grid-cols-1 gap-5 items-start transform-gpu transition-opacity transition-transform duration-500 ease-out ${
                 analysesVisible
                   ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-10"
+                  : "opacity-0 translate-y-6"
               }`}
             >
               <Card className="rounded-[24px] border bg-card p-5 md:p-6 shadow-sm">
@@ -1022,6 +1023,7 @@ const Dashboard = () => {
                                   dataKey="probability"
                                   stroke="hsl(var(--primary))"
                                   strokeWidth={3}
+                                  isAnimationActive={false}
                                   dot={{
                                     r: 4,
                                     strokeWidth: 2,
@@ -1029,7 +1031,7 @@ const Dashboard = () => {
                                     stroke: "hsl(var(--primary))",
                                   }}
                                   activeDot={{
-                                    r: 7,
+                                    r: 6,
                                     strokeWidth: 2,
                                     fill: "hsl(var(--background))",
                                     stroke: "hsl(var(--primary))",
@@ -1243,14 +1245,15 @@ const Dashboard = () => {
                                   dataKey="value"
                                   stroke={chartStrokeColor}
                                   strokeWidth={4}
+                                  isAnimationActive={false}
                                   dot={{
-                                    r: 5,
+                                    r: 4,
                                     strokeWidth: 2,
                                     fill: "hsl(var(--background))",
                                     stroke: chartStrokeColor,
                                   }}
                                   activeDot={{
-                                    r: 8,
+                                    r: 6,
                                     strokeWidth: 2,
                                     fill: "hsl(var(--background))",
                                     stroke: chartStrokeColor,
@@ -1272,10 +1275,7 @@ const Dashboard = () => {
                 {isLoading ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-2xl border p-4 animate-pulse"
-                      >
+                      <div key={item} className="rounded-2xl border p-4">
                         <div className="h-4 w-48 bg-muted rounded mb-3" />
                         <div className="h-3 w-32 bg-muted rounded mb-2" />
                         <div className="h-3 w-24 bg-muted rounded" />
@@ -1354,7 +1354,7 @@ const Dashboard = () => {
                           return (
                             <div
                               key={pred.id}
-                              className={`grid grid-cols-[2fr_1.45fr_1.05fr_1.1fr] gap-4 items-center px-5 py-5 border-t hover:bg-muted/10 transition-all duration-300 ease-out ${
+                              className={`grid grid-cols-[2fr_1.45fr_1.05fr_1.1fr] gap-4 items-center px-5 py-5 border-t hover:bg-muted/10 transform-gpu transition-opacity transition-transform duration-200 ease-out ${
                                 deletingIds.includes(pred.id)
                                   ? "opacity-0 -translate-x-4 scale-[0.98]"
                                   : "opacity-100 translate-x-0 scale-100"
@@ -1474,7 +1474,7 @@ const Dashboard = () => {
                         return (
                           <div
                             key={pred.id}
-                            className={`rounded-[20px] border p-4 bg-background transition-all duration-300 ease-out ${
+                            className={`rounded-[20px] border p-4 bg-background transform-gpu transition-opacity transition-transform duration-200 ease-out ${
                               deletingIds.includes(pred.id)
                                 ? "opacity-0 translate-y-3 scale-[0.98]"
                                 : "opacity-100 translate-y-0 scale-100"
@@ -1599,10 +1599,10 @@ const Dashboard = () => {
 
             <section
               ref={doctorRef}
-              className={`grid grid-cols-1 gap-5 items-start transition-all duration-700 ease-out delay-[400ms] ${
+              className={`grid grid-cols-1 gap-5 items-start transform-gpu transition-opacity transition-transform duration-500 ease-out ${
                 doctorVisible
                   ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-10"
+                  : "opacity-0 translate-y-6"
               }`}
             >
               <Card className="rounded-[24px] border bg-card p-5 shadow-sm">
