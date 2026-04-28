@@ -1,6 +1,6 @@
 // API Configuration and Error Handling
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const API_ENDPOINTS = {
   PREDICT: `${API_BASE_URL}/api/predict/`,
@@ -20,7 +20,7 @@ export class APIError extends Error {
     message?: string
   ) {
     super(message || `API Error: ${code}`);
-    this.name = 'APIError';
+    this.name = "APIError";
   }
 }
 
@@ -59,7 +59,7 @@ async function retryWithBackoff<T>(
       return await fn();
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       if (attempt < config.maxRetries) {
         console.warn(
           `⚠️ Attempt ${attempt + 1} failed. Retrying in ${currentDelay}ms...`,
@@ -71,7 +71,7 @@ async function retryWithBackoff<T>(
     }
   }
 
-  throw lastError || new Error('Max retries exceeded');
+  throw lastError || new Error("Max retries exceeded");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -96,15 +96,16 @@ export async function apiCall<T>(
   const { retryConfig, timeout = 30000, ...fetchOptions } = options || {};
 
   // ❌ لا تعمل retry للـ auth endpoints
-  const isAuthEndpoint = endpoint.includes('/auth/');
-  
+  const isAuthEndpoint = endpoint.includes("/auth/");
+
   // ❌ لا تعمل retry للـ profile endpoint
-  const isProfileEndpoint = endpoint.includes('/profile/');
-  
+  const isProfileEndpoint = endpoint.includes("/profile/");
+
   // استخدام retryConfig مخصص للـ auth endpoints
-  const finalRetryConfig = (isAuthEndpoint || isProfileEndpoint) 
-    ? { maxRetries: 0, delayMs: 0, backoffMultiplier: 1 } 
-    : (retryConfig || DEFAULT_RETRY_CONFIG);
+  const finalRetryConfig =
+    isAuthEndpoint || isProfileEndpoint
+      ? { maxRetries: 0, delayMs: 0, backoffMultiplier: 1 }
+      : retryConfig || DEFAULT_RETRY_CONFIG;
 
   return retryWithBackoff(async () => {
     try {
@@ -114,29 +115,32 @@ export async function apiCall<T>(
       const headers = new Headers();
 
       // الحصول على token من localStorage
-      const storedTokens = localStorage.getItem('auth_tokens');
-      console.log('🔑 Stored tokens:', storedTokens);
+      const storedTokens = localStorage.getItem("auth_tokens");
+      console.log("🔑 Stored tokens:", storedTokens);
+
       if (storedTokens) {
         try {
           const tokens = JSON.parse(storedTokens);
-          console.log('✅ Parsed tokens:', tokens);
+          console.log("✅ Parsed tokens:", tokens);
+
           if (tokens?.access) {
-            headers.set('Authorization', `Bearer ${tokens.access}`);
-            console.log('🛡️ Authorization header set');
+            headers.set("Authorization", `Bearer ${tokens.access}`);
+            console.log("🛡️ Authorization header set");
           } else {
-            console.warn('⚠️ No access token found');
+            console.warn("⚠️ No access token found");
           }
         } catch (e) {
-          console.warn('⚠️ Failed to parse auth tokens:', e);
+          console.warn("⚠️ Failed to parse auth tokens:", e);
         }
       } else {
-        console.warn('⚠️ No tokens in localStorage');
+        console.warn("⚠️ No tokens in localStorage");
       }
 
       // Only set Content-Type to application/json if body is not FormData
       const isFormData = fetchOptions.body instanceof FormData;
+
       if (!isFormData && fetchOptions.body) {
-        headers.set('Content-Type', 'application/json');
+        headers.set("Content-Type", "application/json");
       }
 
       // Add any custom headers
@@ -159,13 +163,17 @@ export async function apiCall<T>(
         // 3. إرسال الـ request
         // ─────────────────────────────────────────────
         console.log(`📤 Sending request to: ${endpoint}`);
-        console.log('📤 Request method:', fetchOptions.method);
-        console.log('📤 Request headers:', Object.fromEntries(headers.entries()));
+        console.log("📤 Request method:", fetchOptions.method);
+        console.log("📤 Request headers:", Object.fromEntries(headers.entries()));
+
         if (fetchOptions.body) {
           try {
-            console.log('📤 Request body:', JSON.parse(fetchOptions.body as string));
+            console.log(
+              "📤 Request body:",
+              JSON.parse(fetchOptions.body as string)
+            );
           } catch (e) {
-            console.log('📤 Request body (raw):', fetchOptions.body);
+            console.log("📤 Request body (raw):", fetchOptions.body);
           }
         }
 
@@ -182,21 +190,22 @@ export async function apiCall<T>(
         // 4. معالجة الأخطاء based on status code
         // ─────────────────────────────────────────────
         if (!response.ok) {
-          await handleErrorResponse(response);
+          await handleErrorResponse(response, endpoint);
         }
 
         // ─────────────────────────────────────────────
         // 5. Parse JSON Response
         // ─────────────────────────────────────────────
         let responseData: T;
+
         try {
           responseData = await response.json();
         } catch (parseError) {
           throw new APIError(
-            'INVALID_JSON',
+            "INVALID_JSON",
             response.status,
             parseError as Error,
-            'الخادم رجع استجابة غير صحيحة'
+            "الخادم رجع استجابة غير صحيحة"
           );
         }
 
@@ -206,9 +215,9 @@ export async function apiCall<T>(
         clearTimeout(timeoutId);
 
         // معالجة خاصة للـ timeout
-        if (error instanceof DOMException && error.name === 'AbortError') {
+        if (error instanceof DOMException && error.name === "AbortError") {
           throw new APIError(
-            'TIMEOUT',
+            "TIMEOUT",
             undefined,
             error,
             `انتهت مهلة الاتصال (${timeout}ms). الخادم قد لا يكون متاحًا.`
@@ -226,18 +235,18 @@ export async function apiCall<T>(
       if (error instanceof TypeError) {
         // خطأ في الاتصال (Network Error)
         throw new APIError(
-          'NETWORK_ERROR',
+          "NETWORK_ERROR",
           undefined,
           error,
-          'فشل الاتصال بالخادم. التحقق من اتصالك بالإنترنت.'
+          "فشل الاتصال بالخادم. التحقق من اتصالك بالإنترنت."
         );
       }
 
       throw new APIError(
-        'UNKNOWN_ERROR',
+        "UNKNOWN_ERROR",
         undefined,
         error as Error,
-        'حدث خطأ غير متوقع'
+        "حدث خطأ غير متوقع"
       );
     }
   }, finalRetryConfig);
@@ -246,13 +255,21 @@ export async function apiCall<T>(
 // ═══════════════════════════════════════════════════════════════
 // Error Response Handler
 // ═══════════════════════════════════════════════════════════════
-async function handleErrorResponse(response: Response): Promise<never> {
+async function handleErrorResponse(
+  response: Response,
+  endpoint: string
+): Promise<never> {
   let errorMessage = `Server Error: ${response.status}`;
   let errorCode = `HTTP_${response.status}`;
 
   try {
     const errorData = await response.json();
-    errorMessage = errorData.message || errorData.error || errorMessage;
+    errorMessage =
+      errorData.detail ||
+      errorData.message ||
+      errorData.error ||
+      errorData.non_field_errors?.[0] ||
+      errorMessage;
     errorCode = errorData.code || errorCode;
   } catch {
     // إذا ما قدرنا نـ parse الخطأ response
@@ -264,30 +281,48 @@ async function handleErrorResponse(response: Response): Promise<never> {
     }
   }
 
+  // ✅ حالة login غلط: 401 معناها email/password غلط
+  if (endpoint.includes("/api/auth/login/") && response.status === 401) {
+    throw new APIError(
+      "INVALID_CREDENTIALS",
+      response.status,
+      undefined,
+      "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+    );
+  }
+
+  // ✅ حالة refresh token غلط/منتهي
+  if (endpoint.includes("/api/auth/token/refresh/") && response.status === 401) {
+    throw new APIError(
+      "TOKEN_EXPIRED",
+      response.status,
+      undefined,
+      "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+    );
+  }
+
   // تحديد الرسالة العربية بناءً على status code
   const arabicMessage = getArabicErrorMessage(response.status, errorMessage);
 
-  throw new APIError(
-    errorCode,
-    response.status,
-    undefined,
-    arabicMessage
-  );
+  throw new APIError(errorCode, response.status, undefined, arabicMessage);
 }
 
 // ═══════════════════════════════════════════════════════════════
 // Arabic Error Messages
 // ═══════════════════════════════════════════════════════════════
-function getArabicErrorMessage(statusCode: number, serverMessage: string): string {
+function getArabicErrorMessage(
+  statusCode: number,
+  serverMessage: string
+): string {
   const messages: Record<number, string> = {
-    400: 'البيانات المرسلة غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.',
-    401: 'أنت لم تسجل دخول. يرجى تسجيل الدخول أولاً.',
-    403: 'ليس لديك صلاحية للوصول إلى هذا المورد.',
-    404: 'المورد المطلوب غير موجود.',
-    500: 'خطأ في الخادم. يرجى المحاولة لاحقاً.',
-    502: 'خطأ في الخادم (Bad Gateway). يرجى المحاولة لاحقاً.',
-    503: 'الخادم غير متاح حالياً. يرجى المحاولة لاحقاً.',
-    504: 'انتهت مهلة الاتصال بالخادم. يرجى المحاولة لاحقاً.',
+    400: "البيانات المرسلة غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.",
+    401: "أنت لم تسجل دخول. يرجى تسجيل الدخول أولاً.",
+    403: "ليس لديك صلاحية للوصول إلى هذا المورد.",
+    404: "المورد المطلوب غير موجود.",
+    500: "خطأ في الخادم. يرجى المحاولة لاحقاً.",
+    502: "خطأ في الخادم (Bad Gateway). يرجى المحاولة لاحقاً.",
+    503: "الخادم غير متاح حالياً. يرجى المحاولة لاحقاً.",
+    504: "انتهت مهلة الاتصال بالخادم. يرجى المحاولة لاحقاً.",
   };
 
   return messages[statusCode] || `حدث خطأ: ${serverMessage}`;
@@ -305,5 +340,5 @@ export function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'حدث خطأ غير متوقع';
+  return "حدث خطأ غير متوقع";
 }

@@ -16,10 +16,6 @@ const ar = {
   bookConsultation: "احجز استشارة",
   settings: "الإعدادات",
 
-  trash: "المهملات",
-  deleteReport: "حذف التقرير",
-  deleteSuccess: "تم نقل التقرير إلى المهملات",
-  deleteError: "حدث خطأ أثناء حذف التقرير",
 riskIndicators: "مؤشرات الخطورة",
   riskLow: "منخفض",
   riskMedium: "متوسط",
@@ -423,26 +419,6 @@ allReports: "كل التقارير",
     mapText: "افتح الموقع على خرائط جوجل",
     egypt: "مصر"
   },
-
-trash: {
-  title: "المحذوفة مؤخرًا",
-  subtitle: "يمكنك استرجاع التقارير في أي وقت",
-actions: "الإجراءات",
-restoreError: "حدث خطأ أثناء استرجاع التقرير",
-  deletedReports: "التقارير المحذوفة",
-  backToDashboard: "العودة إلى لوحة التحكم",
-
-  emptyTitle: "لا توجد تقارير محذوفة",
-  emptyDescription: "عند حذف أي تقرير سيظهر هنا",
-latestDeletedReport: "آخر تقرير محذوف",
-  report: "التقرير",
-  glucose: "الجلوكوز",
-  date: "التاريخ",
-
-  restore: "استرجاع",
-  restoreSuccess: "تم استرجاع التقرير بنجاح"
-},
-
   authPage: {
     secureAccess: "الدخول الآمن",
     loginSubtitle: "سجل الدخول إلى حسابك",

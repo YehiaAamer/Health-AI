@@ -16,11 +16,6 @@ dashboard: {
   previousReports: "Previous Reports",
   bookConsultation: "Book Consultation",
   settings: "Settings",
-
-  trash: "Trash",
-  deleteReport: "Delete report",
-  deleteSuccess: "Report moved to trash",
-  deleteError: "An error occurred while deleting the report",
 riskIndicators: "Risk Indicators",
   riskLow: "Low",
   riskMedium: "Medium",
@@ -443,25 +438,6 @@ allReports: "All Reports",
     mapText: "Open the location on Google Maps",
     egypt: "Egypt"
   },
-
-trash: {
-  title: "Recently Deleted",
-  subtitle: "You can restore reports at any time",
-actions: "Actions",
-restoreError: "An error occurred while restoring the report",
-  deletedReports: "Deleted Reports",
-  backToDashboard: "Back to Dashboard",
-
-  emptyTitle: "No deleted reports",
-  emptyDescription: "Deleted reports will appear here",
-latestDeletedReport: "Latest deleted report",
-  report: "Report",
-  glucose: "Glucose",
-  date: "Date",
-
-  restore: "Restore",
-  restoreSuccess: "Report restored successfully"
-},
 
   authPage: {
     secureAccess: "Secure Access",

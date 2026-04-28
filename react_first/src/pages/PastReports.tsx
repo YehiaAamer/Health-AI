@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Loader2,
   AlertTriangle,
-  Trash2,
   FileText,
   CalendarDays,
   Activity,
@@ -21,7 +20,6 @@ import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { useTranslation } from "react-i18next";
 import { useIsVisible } from "@/hooks/useIsVisible";
-import { useTrash } from "@/contexts/TrashContext";
 
 interface Prediction {
   id: number;
@@ -44,7 +42,6 @@ const DESKTOP_HEADER_HEIGHT = 72;
 export default function PastReports() {
   const { user, isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
-  const { addToTrash, deletedIds } = useTrash();
   const isArabic = i18n.language === "ar";
 
   const heroRef = useRef(null);
@@ -57,7 +54,6 @@ export default function PastReports() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
   const REPORTS_PER_PAGE = 7;
 
@@ -74,11 +70,7 @@ export default function PastReports() {
           method: "GET",
         });
 
-        setPredictions(
-          (data.predictions || []).filter(
-            (item) => !deletedIds.includes(item.id)
-          )
-        );
+        setPredictions(data.predictions || []);
 
         if (data.predictions && data.predictions.length === 0) {
           toast.info(t("pastReportsPage.noReportsToast"));
@@ -95,20 +87,7 @@ export default function PastReports() {
     if (isAuthenticated && user) {
       fetchPredictions();
     }
-  }, [isAuthenticated, user, t, deletedIds]);
-
-  const handleDeletePrediction = (prediction: Prediction) => {
-    if (deletingIds.includes(prediction.id)) return;
-
-    setDeletingIds((prev) => [...prev, prediction.id]);
-
-    window.setTimeout(() => {
-      addToTrash(prediction);
-      setPredictions((prev) => prev.filter((item) => item.id !== prediction.id));
-      setDeletingIds((prev) => prev.filter((id) => id !== prediction.id));
-      toast.success(t("dashboard.deleteSuccess"));
-    }, 300);
-  };
+  }, [isAuthenticated, user, t]);
 
   const formatNumber = (
     value: number,
@@ -276,10 +255,6 @@ export default function PastReports() {
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [deletedIds.length]);
 
   if (!isAuthenticated) {
     return (
@@ -460,23 +435,18 @@ export default function PastReports() {
                             isArabic ? "text-left" : "text-right"
                           }`}
                         >
-                          {t("trash.actions")}
+                          {t("pastReportsPage.viewReport")}
                         </span>
                       </div>
 
                       {paginatedPredictions.map((pred) => {
                         const tone = getProbabilityTone();
-                        const isDeleting = deletingIds.includes(pred.id);
                         const topIndicators = getTopRiskIndicators(pred);
 
                         return (
                           <div
                             key={pred.id}
-                            className={`grid grid-cols-[2fr_1.45fr_1.05fr_.75fr_1.1fr] gap-4 items-center px-5 py-5 border-t hover:bg-muted/10 transition-all duration-300 ease-out ${
-                              isDeleting
-                                ? "opacity-0 -translate-y-2 scale-[0.98] max-h-0 py-0 overflow-hidden"
-                                : "opacity-100 translate-y-0 scale-100"
-                            }`}
+                            className="grid grid-cols-[2fr_1.45fr_1.05fr_.75fr_1.1fr] gap-4 items-center px-5 py-5 border-t hover:bg-muted/10 transition-all duration-300 ease-out"
                           >
                             <div className="min-w-0">
                               <div className="flex items-center gap-3">
@@ -579,26 +549,10 @@ export default function PastReports() {
                                 <Button
                                   variant="ghost"
                                   className="rounded-xl whitespace-nowrap h-10"
-                                  disabled={isDeleting}
                                 >
                                   {t("pastReportsPage.viewReport")}
                                 </Button>
                               </Link>
-
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="rounded-xl h-10 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 active:scale-95"
-                                onClick={() => handleDeletePrediction(pred)}
-                                disabled={isDeleting}
-                                aria-label={t("dashboard.deleteReport")}
-                              >
-                                {isDeleting ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </Button>
                             </div>
                           </div>
                         );
@@ -608,17 +562,12 @@ export default function PastReports() {
 
                   <div className="grid gap-4 lg:hidden">
                     {paginatedPredictions.map((pred) => {
-                      const isDeleting = deletingIds.includes(pred.id);
                       const topIndicators = getTopRiskIndicators(pred);
 
                       return (
                         <div
                           key={pred.id}
-                          className={`rounded-[20px] border p-4 bg-background transition-all duration-300 ease-out ${
-                            isDeleting
-                              ? "opacity-0 translate-y-3 scale-[0.98]"
-                              : "opacity-100 translate-y-0 scale-100"
-                          }`}
+                          className="rounded-[20px] border p-4 bg-background transition-all duration-300 ease-out"
                         >
                           <div className="flex items-center gap-3">
                             <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -718,26 +667,10 @@ export default function PastReports() {
                                     type="button"
                                     variant="ghost"
                                     className="rounded-xl w-full h-10"
-                                    disabled={isDeleting}
                                   >
                                     {t("pastReportsPage.viewReport")}
                                   </Button>
                                 </Link>
-
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="rounded-xl w-full h-10 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                                  onClick={() => handleDeletePrediction(pred)}
-                                  disabled={isDeleting}
-                                  aria-label={t("dashboard.deleteReport")}
-                                >
-                                  {isDeleting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </Button>
                               </div>
                             </div>
                           </div>

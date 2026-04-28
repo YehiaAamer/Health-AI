@@ -35,7 +35,7 @@ export interface AuthContextType {
     email: string,
     password: string,
     firstName: string,
-    lastName: string,
+    lastName: string
   ) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -80,7 +80,7 @@ function clearStoredUser(): void {
 // Context Creation
 // ═══════════════════════════════════════════════════════════════
 export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined,
+  undefined
 );
 
 // ═══════════════════════════════════════════════════════════════
@@ -124,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       email: string,
       password: string,
       firstName: string,
-      lastName: string,
+      lastName: string
     ) => {
       setIsLoading(true);
       setError(null);
@@ -148,32 +148,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         console.log("📥 Register response:", response);
 
+        if (!response?.user || !response?.tokens?.access) {
+          throw new Error("فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.");
+        }
+
         setStoredTokens(response.tokens);
         setStoredUser(response.user);
         setUser(response.user);
 
         console.log("✅ تم التسجيل بنجاح:", response.user.email);
-
-        // Force reload to update all components
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
       } catch (error: unknown) {
         const message =
           (error instanceof Error ? error.message : String(error)) ||
           "فشل إنشاء الحساب";
+
         setError(message);
         console.error("❌ Register failed:", message);
+
         toast({
           title: "Error",
           description: message,
           variant: "destructive",
         });
+
+        throw new Error(message);
       } finally {
         setIsLoading(false);
       }
     },
-    [],
+    []
   );
 
   // ─────────────────────────────────────────────
@@ -200,6 +203,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("📥 Response user ID:", response.user?.id);
       console.log("📥 Response user email:", response.user?.email);
 
+      if (!response?.user || !response?.tokens?.access) {
+        throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+      }
+
       // ✅ تخزين الـ tokens والـ user
       setStoredTokens(response.tokens);
       setStoredUser(response.user);
@@ -208,29 +215,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("✅ تم تسجيل الدخول بنجاح:", response.user.email);
       console.log("✅ Stored tokens:", response.tokens);
       console.log("✅ Stored user:", response.user);
-
-      // Force reload to update all components
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
     } catch (error: unknown) {
       const message =
         (error instanceof Error ? error.message : String(error)) ||
         "فشل تسجيل الدخول";
+
       setError(message);
       console.error("❌ Login failed:", message);
+
       toast({
         title: "Error",
         description: message,
         variant: "destructive",
       });
+
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ─────────────────────────────────────────────
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // ─────────────────────────────────────────────
   // Updated Logout by A.M
   // ─────────────────────────────────────────────
   const logout = useCallback(async () => {
@@ -254,7 +260,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
           console.log("✅ Backend logout successful");
         } catch (err) {
-          console.warn("⚠️ Backend logout failed, but continuing with frontend cleanup:", err);
+          console.warn(
+            "⚠️ Backend logout failed, but continuing with frontend cleanup:",
+            err
+          );
         }
       } else {
         console.log("⚠️ No refresh token found, skipping backend logout");
@@ -276,8 +285,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
     }
   }, []);
-  
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // ─────────────────────────────────────────────
   // Refresh Token
@@ -294,7 +303,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         {
           method: "POST",
           body: JSON.stringify({ refresh: tokens.refresh }),
-        },
+        }
       );
 
       // response may contain only `access` or both `access` and `refresh`
@@ -346,35 +355,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // ─────────────────────────────────────────────
-  // Original Logout
-  // ─────────────────────────────────────────────
-  // const logout = useCallback(async () => {
-  //   setIsLoading(true);
-  //   setError(null);
-
-  //   try {
-  //     const tokens = getStoredTokens();
-  //     if (tokens?.refresh) {
-  //       await apiCall(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
-  //         method: "POST",
-  //         body: JSON.stringify({ refresh: tokens.refresh }),
-  //         headers: {
-  //           Authorization: `Bearer ${tokens.access}`,
-  //         },
-  //       });
-  //     }
-  //   } catch (err) {
-  //     console.warn("⚠️ خطأ في تسجيل الخروج من الخادم:", err);
-  //     // حتى لو فشل، نحذف البيانات المحلية
-  //   } finally {
-  //     clearStoredTokens();
-  //     clearStoredUser();
-  //     setUser(null);
-  //     setIsLoading(false);
-  //     console.log("✅ تم تسجيل الخروج");
-  //   }
-  // }, []);
+// ─────────────────────────────────────────────
+// Original Logout
+// ─────────────────────────────────────────────
+// const logout = useCallback(async () => {
+//   setIsLoading(true);
+//   setError(null);
+//
+//   try {
+//     const tokens = getStoredTokens();
+//     if (tokens?.refresh) {
+//       await apiCall(`${import.meta.env.VITE_API_URL}/api/auth/logout/`, {
+//         method: "POST",
+//         body: JSON.stringify({ refresh: tokens.refresh }),
+//         headers: {
+//           Authorization: `Bearer ${tokens.access}`,
+//         },
+//       });
+//     }
+//   } catch (err) {
+//     console.warn("⚠️ خطأ في تسجيل الخروج من الخادم:", err);
+//     // حتى لو فشل، نحذف البيانات المحلية
+//   } finally {
+//     clearStoredTokens();
+//     clearStoredUser();
+//     setUser(null);
+//     setIsLoading(false);
+//     console.log("✅ تم تسجيل الخروج");
+//   }
+// }, []);

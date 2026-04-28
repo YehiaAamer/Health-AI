@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { GlobalLoaderProvider } from "./contexts/GlobalLoaderContext";
-import { TrashProvider } from "./contexts/TrashContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import ChatBot from "./components/ChatBot";
 import LandingPage from "./pages/LandingPage";
@@ -22,8 +21,16 @@ import Help from "./pages/Help";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import ContactUs from "./pages/ContactUs";
-import Trash from "./pages/Trash";
 import NotFound from "./pages/NotFound";
+import { useAuth } from "@/hooks/useAuth";
+
+function AuthenticatedChatBot() {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) return null;
+
+  return <ChatBot />;
+}
 
 export default function App() {
   const { i18n } = useTranslation();
@@ -37,104 +44,94 @@ export default function App() {
   return (
     <AuthProvider>
       <GlobalLoaderProvider>
-        <TrashProvider>
-          <Toaster />
+        <Toaster />
 
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/home" element={<LandingPage />} />
-            <Route path="/auth" element={<Auth />} />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<LandingPage />} />
+          <Route path="/auth" element={<Auth />} />
 
-            <Route
-              path="/login"
-              element={<Navigate to="/auth?tab=login" replace />}
-            />
-            <Route
-              path="/signup"
-              element={<Navigate to="/auth?tab=signup" replace />}
-            />
+          <Route
+            path="/login"
+            element={<Navigate to="/auth?tab=login" replace />}
+          />
+          <Route
+            path="/signup"
+            element={<Navigate to="/auth?tab=signup" replace />}
+          />
 
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/diagnosis"
-              element={
-                <ProtectedRoute>
-                  <DiagnosisWizard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/report"
-              element={
-                <ProtectedRoute>
-                  <Report />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/consultations"
-              element={
-                <ProtectedRoute>
-                  <Consultations />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/past-reports"
-              element={
-                <ProtectedRoute>
-                  <PastReports />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/history"
-              element={
-                <ProtectedRoute>
-                  <History />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/edit-profile"
-              element={
-                <ProtectedRoute>
-                  <EditProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/trash"
-              element={
-                <ProtectedRoute>
-                  <Trash />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/diagnosis"
+            element={
+              <ProtectedRoute>
+                <DiagnosisWizard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/report"
+            element={
+              <ProtectedRoute>
+                <Report />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consultations"
+            element={
+              <ProtectedRoute>
+                <Consultations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/past-reports"
+            element={
+              <ProtectedRoute>
+                <PastReports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <History />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-profile"
+            element={
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route
-              path="/reset-password/:uid/:token"
-              element={<ResetPasswordConfirm />}
-            />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/reset-password/:uid/:token"
+            element={<ResetPasswordConfirm />}
+          />
 
-            <Route path="/help" element={<Help />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/contact" element={<ContactUs />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/contact" element={<ContactUs />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
 
-          <ChatBot />
-        </TrashProvider>
+        <AuthenticatedChatBot />
       </GlobalLoaderProvider>
     </AuthProvider>
   );

@@ -21,7 +21,6 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  Trash2,
   LogOut,
   CircleHelp,
   TrendingUp,
@@ -35,7 +34,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiCall, API_ENDPOINTS } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { useIsVisible } from "@/hooks/useIsVisible";
-import { useTrash } from "@/contexts/TrashContext";
 import {
   ResponsiveContainer,
   LineChart,
@@ -65,12 +63,10 @@ interface Prediction {
 const DESKTOP_HEADER_HEIGHT = 72;
 const DESKTOP_SIDEBAR_WIDTH = 260;
 const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 88;
-const DELETE_ANIMATION_DURATION = 280;
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const { t, i18n } = useTranslation();
-  const { addToTrash, deletedIds } = useTrash();
   const isArabic = i18n.language === "ar";
 
   const heroRef = useRef(null);
@@ -93,7 +89,6 @@ const Dashboard = () => {
   const [selectedRange, setSelectedRange] = useState<
     "weekly" | "monthly" | null
   >(null);
-  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchPredictions = async () => {
@@ -108,13 +103,11 @@ const Dashboard = () => {
         });
 
         setPredictions(
-          (data.predictions || [])
-            .filter((item) => !deletedIds.includes(item.id))
-            .sort(
-              (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime()
-            )
+          (data.predictions || []).sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          )
         );
       } catch (err) {
         console.error("Error fetching predictions:", err);
@@ -128,20 +121,7 @@ const Dashboard = () => {
     if (user) {
       fetchPredictions();
     }
-  }, [user, t, deletedIds]);
-
-  const handleDeletePrediction = (prediction: Prediction) => {
-    if (deletingIds.includes(prediction.id)) return;
-
-    setDeletingIds((prev) => [...prev, prediction.id]);
-
-    setTimeout(() => {
-      addToTrash(prediction);
-      setPredictions((prev) => prev.filter((item) => item.id !== prediction.id));
-      setDeletingIds((prev) => prev.filter((id) => id !== prediction.id));
-      toast.success(t("dashboard.deleteSuccess"));
-    }, DELETE_ANIMATION_DURATION);
-  };
+  }, [user, t]);
 
   const handleLogout = async () => {
     try {
@@ -619,18 +599,6 @@ const Dashboard = () => {
               {!isDesktopSidebarCollapsed && (
                 <span>{t("dashboard.bookConsultation")}</span>
               )}
-            </div>
-          </Link>
-
-          <Link to="/trash" className="block">
-            <div
-              className={`${navItemClass} ${
-                isDesktopSidebarCollapsed ? "justify-center px-2" : ""
-              }`}
-              title={isDesktopSidebarCollapsed ? t("dashboard.trash") : undefined}
-            >
-              <Trash2 className={navIconClass} />
-              {!isDesktopSidebarCollapsed && <span>{t("dashboard.trash")}</span>}
             </div>
           </Link>
         </div>
@@ -1354,11 +1322,7 @@ const Dashboard = () => {
                           return (
                             <div
                               key={pred.id}
-                              className={`grid grid-cols-[2fr_1.45fr_1.05fr_1.1fr] gap-4 items-center px-5 py-5 border-t hover:bg-muted/10 transform-gpu transition-opacity transition-transform duration-200 ease-out ${
-                                deletingIds.includes(pred.id)
-                                  ? "opacity-0 -translate-x-4 scale-[0.98]"
-                                  : "opacity-100 translate-x-0 scale-100"
-                              }`}
+                              className="grid grid-cols-[2fr_1.45fr_1.05fr_1.1fr] gap-4 items-center px-5 py-5 border-t hover:bg-muted/10"
                             >
                               <div className="min-w-0">
                                 <div className="flex items-center gap-3">
@@ -1448,18 +1412,6 @@ const Dashboard = () => {
                                     {t("dashboard.viewReport")}
                                   </Button>
                                 </Link>
-
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  disabled={deletingIds.includes(pred.id)}
-                                  className="rounded-xl h-10 w-10 text-red-500 hover:text-red-600 hover:bg-red-500/10 shrink-0 disabled:opacity-50"
-                                  onClick={() => handleDeletePrediction(pred)}
-                                  aria-label={t("dashboard.deleteReport")}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
                               </div>
                             </div>
                           );
@@ -1474,11 +1426,7 @@ const Dashboard = () => {
                         return (
                           <div
                             key={pred.id}
-                            className={`rounded-[20px] border p-4 bg-background transform-gpu transition-opacity transition-transform duration-200 ease-out ${
-                              deletingIds.includes(pred.id)
-                                ? "opacity-0 translate-y-3 scale-[0.98]"
-                                : "opacity-100 translate-y-0 scale-100"
-                            }`}
+                            className="rounded-[20px] border p-4 bg-background"
                           >
                             <div className="flex items-start gap-3">
                               <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -1544,47 +1492,34 @@ const Dashboard = () => {
                                     {t("dashboard.action")}
                                   </p>
 
-                                  <div className="flex flex-col gap-2">
-                                    <Link
-                                      to="/report"
-                                      state={{
-                                        formData: {
-                                          pregnancies: pred.pregnancies,
-                                          glucose: pred.glucose,
-                                          bloodPressure: pred.blood_pressure,
-                                          skinThickness: pred.skin_thickness,
-                                          insulin: pred.insulin,
-                                          bmi: pred.bmi,
-                                          diabetesPedigreeFunction:
-                                            pred.diabetes_pedigree_function,
-                                          age: pred.age,
-                                        },
-                                        probability: pred.probability,
-                                        riskLevel: pred.risk_level,
-                                        message: pred.message,
-                                        predictionId: pred.id,
-                                      }}
-                                    >
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className="rounded-xl w-full h-10"
-                                      >
-                                        {t("dashboard.viewReport")}
-                                      </Button>
-                                    </Link>
-
+                                  <Link
+                                    to="/report"
+                                    state={{
+                                      formData: {
+                                        pregnancies: pred.pregnancies,
+                                        glucose: pred.glucose,
+                                        bloodPressure: pred.blood_pressure,
+                                        skinThickness: pred.skin_thickness,
+                                        insulin: pred.insulin,
+                                        bmi: pred.bmi,
+                                        diabetesPedigreeFunction:
+                                          pred.diabetes_pedigree_function,
+                                        age: pred.age,
+                                      },
+                                      probability: pred.probability,
+                                      riskLevel: pred.risk_level,
+                                      message: pred.message,
+                                      predictionId: pred.id,
+                                    }}
+                                  >
                                     <Button
                                       type="button"
                                       variant="ghost"
-                                      disabled={deletingIds.includes(pred.id)}
-                                      className="rounded-xl w-full h-10 text-red-500 hover:text-red-600 hover:bg-red-500/10 disabled:opacity-50"
-                                      onClick={() => handleDeletePrediction(pred)}
-                                      aria-label={t("dashboard.deleteReport")}
+                                      className="rounded-xl w-full h-10"
                                     >
-                                      <Trash2 className="h-4 w-4" />
+                                      {t("dashboard.viewReport")}
                                     </Button>
-                                  </div>
+                                  </Link>
                                 </div>
                               </div>
                             </div>
