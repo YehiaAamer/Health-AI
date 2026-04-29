@@ -135,10 +135,10 @@ const Help = () => {
                   {t("help.contact.emailDescription")}
                 </p>
                 <a
-                  href="mailto:support@healthai.com"
+                  href="mailto:support@HealthCare.com"
                   className="text-primary hover:underline"
                 >
-                  support@healthai.com
+                  support@HealthCare.com
                 </a>
               </div>
             </div>

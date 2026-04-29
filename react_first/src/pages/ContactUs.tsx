@@ -161,8 +161,8 @@ const ContactUs = () => {
     {
       icon: MailOpen,
       title: t("contactPage.emailTitle"),
-      value: "support@healthai.com",
-      href: "mailto:support@healthai.com",
+      value: "support@HealthCare.com",
+      href: "mailto:support@healthCare.com",
     },
   ];
 

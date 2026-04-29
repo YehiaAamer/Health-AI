@@ -1,4 +1,4 @@
-# 🔧 Fixes Applied - HealthAI Project
+# 🔧 Fixes Applied - HealthCare Project
 
 ## Date: March 17, 2026
 
@@ -119,7 +119,7 @@ npm run dev
 ```bash
 curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@healthai.com","password":"HealthAI123!"}'
+  -d '{"email":"user@HealthCare.com","password":"HealthCare123!"}'
 ```
 
 **Response**:
@@ -128,7 +128,7 @@ curl -X POST http://localhost:8000/api/auth/login/ \
   "message": "تم تسجيل الدخول بنجاح",
   "user": {
     "id": 8,
-    "email": "user@healthai.com",
+    "email": "user@HealthCare.com",
     "first_name": "Health",
     "last_name": "User"
   },
@@ -143,7 +143,7 @@ curl -X POST http://localhost:8000/api/auth/login/ \
 ```bash
 curl -X POST http://localhost:8000/api/auth/register/ \
   -H "Content-Type: application/json" \
-  -d '{"email":"newuser@healthai.com","password":"HealthAI123!","first_name":"New","last_name":"User"}'
+  -d '{"email":"newuser@HealthCare.com","password":"HealthCare123!","first_name":"New","last_name":"User"}'
 ```
 
 **Response**:
@@ -161,8 +161,8 @@ curl -X POST http://localhost:8000/api/auth/register/ \
 
 | Email | Password | Status |
 |-------|----------|--------|
-| `user@healthai.com` | `HealthAI123!` | ✅ Ready to use |
-| `newuser@healthai.com` | `HealthAI123!` | ✅ Ready to use |
+| `user@HealthCare.com` | `HealthCare123!` | ✅ Ready to use |
+| `newuser@HealthCare.com` | `HealthCare123!` | ✅ Ready to use |
 
 ---
 
@@ -189,8 +189,8 @@ npm run dev
 ### 4. Test Login
 1. Go to http://localhost:5173/auth
 2. Click "تسجيل الدخول" tab
-3. Enter email: `user@healthai.com`
-4. Enter password: `HealthAI123!`
+3. Enter email: `user@HealthCare.com`
+4. Enter password: `HealthCare123!`
 5. Click "تسجيل الدخول"
 6. ✅ Should redirect to Dashboard
 

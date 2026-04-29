@@ -10,6 +10,7 @@ import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useIsVisible } from "@/hooks/useIsVisible";
 
 const DESKTOP_HEADER_HEIGHT = 72;
 
@@ -20,6 +21,14 @@ export default function EditProfile() {
   const { user, isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const profileRef = useRef(null);
+  const formRef = useRef(null);
+  const actionsRef = useRef(null);
+
+  const profileVisible = useIsVisible(profileRef);
+  const formVisible = useIsVisible(formRef);
+  const actionsVisible = useIsVisible(actionsRef);
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -195,20 +204,27 @@ export default function EditProfile() {
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-background"
+      className="min-h-screen flex flex-col bg-background overflow-x-hidden"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <Header variant="dashboard" />
 
       <main
-        className="flex-1"
+        className="flex-1 w-full"
         style={{
           paddingTop: `${DESKTOP_HEADER_HEIGHT + 24}px`,
         }}
       >
-        <div className="container mx-auto px-4 py-8 md:py-10">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-10 flex flex-col items-center text-center">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+          <div className="mx-auto w-full max-w-4xl">
+            <div
+              ref={profileRef}
+              className={`mb-10 flex flex-col items-center text-center transition-all duration-700 ease-out ${
+                profileVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
               <div className="relative mb-5">
                 <div className="h-28 w-28 overflow-hidden rounded-full bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center">
                   {profilePicturePreview ? (
@@ -251,7 +267,10 @@ export default function EditProfile() {
                 className="hidden"
               />
 
-              <h1 className="text-3xl font-semibold tracking-tight">{fullName}</h1>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                {fullName}
+              </h1>
+
               <p className="mt-2 break-all text-sm text-muted-foreground">
                 {formData.email || user?.email}
               </p>
@@ -265,7 +284,14 @@ export default function EditProfile() {
               )}
 
               <div className="space-y-10">
-                <div>
+                <div
+                  ref={formRef}
+                  className={`transition-all duration-700 ease-out delay-100 ${
+                    formVisible
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-10"
+                  }`}
+                >
                   <div className="mb-6">
                     <h2 className="text-2xl font-semibold tracking-tight">
                       {t("editProfile.title")}
@@ -370,7 +396,14 @@ export default function EditProfile() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center justify-center space-y-3">
+                <div
+                  ref={actionsRef}
+                  className={`flex flex-col items-center justify-center space-y-3 transition-all duration-700 ease-out delay-200 ${
+                    actionsVisible
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-10"
+                  }`}
+                >
                   <Button
                     type="submit"
                     className="h-11 min-w-[180px] rounded-full px-6"

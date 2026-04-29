@@ -254,7 +254,7 @@ allReports: "All Reports",
       aiDiagnosis: {
         question: "Is the AI diagnosis a replacement for a doctor?",
         answer:
-          "No, HealthAI is a smart tool designed to provide preliminary insights and information based on symptoms, but it does not replace professional medical advice."
+          "No, HealthCare is a smart tool designed to provide preliminary insights and information based on symptoms, but it does not replace professional medical advice."
       },
       dataSecurity: {
         question: "How secure is my medical data?",
@@ -340,7 +340,7 @@ allReports: "All Reports",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
     contact: "Contact Support",
-    copyright: "© 2026 HealthAI. All rights reserved."
+    copyright: "© 2026 HealthCare. All rights reserved."
   },
 
   landing: {
@@ -381,9 +381,9 @@ allReports: "All Reports",
 
     testimonialsTitle: "What Our Users Say",
     testimonialsSubtitle:
-      "Real stories from patients and doctors who trust HealthAI.",
+      "Real stories from patients and doctors who trust HealthCare.",
     testimonial1Text:
-      '"HealthAI revolutionized my practice. It provides quick and reliable insights, making diagnosis faster for my patients."',
+      '"HealthCare revolutionized my practice. It provides quick and reliable insights, making diagnosis faster for my patients."',
     testimonial1Name: "Dr. Sam Carter",
     testimonial1Role: "General Practitioner",
     testimonial2Text:
@@ -668,206 +668,205 @@ allReports: "All Reports",
     }
   },
 
-  terms: {
-    badge: "Terms & Conditions",
-    title: "Terms of Service",
-    subtitle:
-      "Please read these terms carefully before using HealthAI. Your continued use of the platform indicates your acceptance of these terms and conditions.",
-    lastUpdatedLabel: "Last updated:",
-    contents: "Contents",
-    sectionLabel: "Section",
-    notice: {
-      title: "Important Notice",
-      description:
-        "By using HealthAI, you agree to these terms. If you do not agree, please do not use the platform."
+terms: {
+  badge: "Terms & Conditions",
+  title: "Terms of Service",
+  subtitle:
+    "Please read these terms carefully before using HealthCare. Your continued use of the platform indicates your acceptance of these terms and conditions.",
+  lastUpdatedLabel: "Last updated:",
+  contents: "Contents",
+  sectionLabel: "Section",
+  notice: {
+    title: "Important Notice",
+    description:
+      "By using HealthCare, you agree to these terms. If you do not agree, please do not use the platform."
+  },
+  sections: {
+    acceptance: {
+      title: "Acceptance of Terms",
+      intro: "By using HealthCare, you:",
+      items: [
+        "Agree to comply with these terms and conditions",
+        "Acknowledge that you have read and understood the Privacy Policy",
+        "Commit to using the platform only for its intended purposes",
+        "Acknowledge that you are responsible for the accuracy of the information you provide"
+      ]
     },
-    sections: {
-      acceptance: {
-        title: "Acceptance of Terms",
-        intro: "By using HealthAI, you:",
-        items: [
-          "Agree to comply with these terms and conditions",
-          "Acknowledge that you have read and understood the Privacy Policy",
-          "Commit to using the platform only for its intended purposes",
-          "Acknowledge that you are responsible for the accuracy of the information you provide"
-        ]
-      },
-      serviceDescription: {
-        title: "Service Description",
-        intro: "HealthAI provides the following services:",
-        items: [
-          "Diabetes risk analysis based on your health data",
-          "An AI medical assistant to answer your health-related questions",
-          "Storage of your previous analysis history",
-          "General health recommendations"
-        ],
-        note:
-          "Note: These services are for informational and educational purposes only and are not a substitute for professional medical advice."
-      },
-      medicalDisclaimer: {
-        title: "Medical Disclaimer",
-        warning: " HealthAI does not provide medical diagnosis or treatment!",
-        items: [
-          "The analyses provided are statistical estimates only",
-          "Do not rely on the results for treatment decisions without consulting a doctor",
-          "The platform is not liable for any harm resulting from the use of the information",
-          "You should consult a qualified physician for any health concern",
-          "In medical emergencies, call emergency services immediately (123 in Egypt)"
-        ]
-      },
-      userObligations: {
-        title: "Your Responsibilities as a User",
-        intro: "When using the platform, you agree to:",
-        items: [
-          "Provide accurate and truthful information",
-          "Not use the platform for unlawful purposes",
-          "Not attempt to hack or tamper with the platform",
-          "Not impersonate another person",
-          "Not use the platform to spread misleading information",
-          "Maintain the confidentiality of your account data"
-        ]
-      },
-      intellectualProperty: {
-        title: "Intellectual Property",
-        intro:
-          "All platform content is protected by intellectual property rights:",
-        items: [
-          "Logos and trade names are owned by HealthAI",
-          "Medical content is protected by copyright",
-          "Algorithms and models are owned by the platform",
-          "Content may not be copied or distributed without permission"
-        ]
-      },
-      serviceModification: {
-        title: "Service Modification",
-        intro: "We reserve the right to:",
-        items: [
-          "Modify or discontinue the service in whole or in part",
-          "Change available features",
-          "Update the medical models in use",
-          "Amend these terms at any time"
-        ],
-        footnote:
-          "We will try to notify you in advance of important changes whenever possible."
-      },
-      accountTermination: {
-        title: "Account Termination",
-        intro:
-          "We may suspend or terminate your account in the following cases:",
-        items: [
-          "Violation of these terms and conditions",
-          "Unlawful use of the platform",
-          "Your request to delete your account",
-          "Permanent discontinuation of the service"
-        ]
-      },
-      governingLaw: {
-        title: "Governing Law",
-        intro: "These terms are governed by:",
-        items: [
-          "The laws of the Arab Republic of Egypt",
-          "Any dispute shall be resolved in the competent courts",
-          "If any provision conflicts with the law, that provision shall be deemed invalid while the remaining provisions remain in effect"
-        ]
-      }
+    serviceDescription: {
+      title: "Service Description",
+      intro: "HealthCare provides the following services:",
+      items: [
+        "Diabetes risk analysis based on your health data",
+        "An AI medical assistant to answer your health-related questions",
+        "Storage of your previous analysis history",
+        "General health recommendations"
+      ],
+      note:
+        "Note: These services are for informational and educational purposes only and are not a substitute for professional medical advice."
     },
-    contact: {
-      title: "Have Questions?",
-      description:
-        "If you have any questions about the Terms of Service, please contact us."
+    medicalDisclaimer: {
+      title: "Medical Disclaimer",
+      warning: "HealthCare does not provide medical diagnosis or treatment!",
+      items: [
+        "The analyses provided are statistical estimates only",
+        "Do not rely on the results for treatment decisions without consulting a doctor",
+        "The platform is not liable for any harm resulting from the use of the information",
+        "You should consult a qualified physician for any health concern",
+        "In medical emergencies, call emergency services immediately (123 in Egypt)"
+      ]
+    },
+    userObligations: {
+      title: "Your Responsibilities as a User",
+      intro: "When using the platform, you agree to:",
+      items: [
+        "Provide accurate and truthful information",
+        "Not use the platform for unlawful purposes",
+        "Not attempt to hack or tamper with the platform",
+        "Not impersonate another person",
+        "Not use the platform to spread misleading information",
+        "Maintain the confidentiality of your account data"
+      ]
+    },
+    intellectualProperty: {
+      title: "Intellectual Property",
+      intro:
+        "All platform content is protected by intellectual property rights:",
+      items: [
+        "Logos and trade names are owned by HealthCare",
+        "Medical content is protected by copyright",
+        "Algorithms and models are owned by the platform",
+        "Content may not be copied or distributed without permission"
+      ]
+    },
+    serviceModification: {
+      title: "Service Modification",
+      intro: "We reserve the right to:",
+      items: [
+        "Modify or discontinue the service in whole or in part",
+        "Change available features",
+        "Update the medical models in use",
+        "Amend these terms at any time"
+      ],
+      footnote:
+        "We will try to notify you in advance of important changes whenever possible."
+    },
+    accountTermination: {
+      title: "Account Termination",
+      intro:
+        "We may suspend or terminate your account in the following cases:",
+      items: [
+        "Violation of these terms and conditions",
+        "Unlawful use of the platform",
+        "Your request to delete your account",
+        "Permanent discontinuation of the service"
+      ]
+    },
+    governingLaw: {
+      title: "Governing Law",
+      intro: "These terms are governed by:",
+      items: [
+        "The laws of the Arab Republic of Egypt",
+        "Any dispute shall be resolved in the competent courts",
+        "If any provision conflicts with the law, that provision shall be deemed invalid while the remaining provisions remain in effect"
+      ]
     }
   },
-
-  privacy: {
-    title: "Privacy Policy",
-    subtitle:
-      "Please review how HealthAI collects, uses, stores, and protects your information when you use the platform.",
-    lastUpdatedLabel: "Last updated:",
-    sectionLabel: "Section",
-    sections: {
-      collectedInformation: {
-        title: "Information We Collect",
-        intro: "We collect the following information to provide our services:",
-        items: [
-          "Personal information: name, email address, age",
-          "Medical data: analysis results and health measurements such as glucose, blood pressure, and BMI",
-          "Usage data: how you interact with the platform",
-          "Chat history: questions submitted to the AI medical assistant"
-        ]
-      },
-      howWeUseInformation: {
-        title: "How We Use Your Information",
-        intro: "We use your information for the following purposes:",
-        items: [
-          "Provide accurate and personalized health analysis",
-          "Improve service quality and performance",
-          "Enable the AI medical assistant to respond to your questions",
-          "Store previous analysis history for future reference",
-          "Send important health-related alerts if you choose to receive them"
-        ]
-      },
-      dataProtection: {
-        title: "Data Protection",
-        intro: "We apply strict security measures to protect your data:",
-        items: [
-          "Encryption of sensitive medical data",
-          "Storage on secure servers",
-          "Restricted access for authorized personnel only",
-          "Regular data backups",
-          "Ongoing review of security procedures"
-        ]
-      },
-      informationSharing: {
-        title: "Information Sharing",
-        strong:
-          "We do not sell or rent your personal information to third parties.",
-        intro: "Your information may only be shared in the following cases:",
-        items: [
-          "With your explicit consent",
-          "With service providers acting on our behalf under confidentiality obligations",
-          "When required by law or court order",
-          "To protect your safety or the safety of others"
-        ]
-      },
-      yourRights: {
-        title: "Your Rights",
-        intro: "You have the following rights regarding your data:",
-        items: [
-          "Access your personal data",
-          "Correct inaccurate information",
-          "Delete your account and data, noting this may affect service availability",
-          "Export your data in a readable format",
-          "Withdraw consent to data processing"
-        ]
-      },
-      medicalDisclaimer: {
-        title: "Medical Disclaimer",
-        strong:
-          "Important: HealthAI is a support tool and does not replace professional medical advice.",
-        items: [
-          "The information provided is for informational purposes only",
-          "It does not constitute a final medical diagnosis",
-          "A qualified physician should be consulted for diagnosis and treatment",
-          "Do not disregard professional medical advice based on platform information"
-        ]
-      },
-      policyChanges: {
-        title: "Changes to This Policy",
-        intro:
-          "We may update this Privacy Policy from time to time. Important changes may be communicated through:",
-        items: [
-          "Publishing the updated policy on the platform",
-          "Sending an email if the changes are material",
-          "Updating the “Last updated” date at the top of the page"
-        ]
-      }
-    },
-    contact: {
-      title: "Have questions?",
-      description:
-        "If you have any questions about this Privacy Policy, please contact us."
-    }
+  contact: {
+    title: "Have Questions?",
+    description:
+      "If you have any questions about the Terms of Service, please contact us."
   }
+},
+privacy: {
+  title: "Privacy Policy",
+  subtitle:
+    "Please review how HealthCare collects, uses, stores, and protects your information when you use the platform.",
+  lastUpdatedLabel: "Last updated:",
+  sectionLabel: "Section",
+  sections: {
+    collectedInformation: {
+      title: "Information We Collect",
+      intro: "We collect the following information to provide our services:",
+      items: [
+        "Personal information: name, email address, age",
+        "Medical data: analysis results and health measurements such as glucose, blood pressure, and BMI",
+        "Usage data: how you interact with the platform",
+        "Chat history: questions submitted to the AI medical assistant"
+      ]
+    },
+    howWeUseInformation: {
+      title: "How We Use Your Information",
+      intro: "We use your information for the following purposes:",
+      items: [
+        "Provide accurate and personalized health analysis",
+        "Improve service quality and performance",
+        "Enable the AI medical assistant to respond to your questions",
+        "Store previous analysis history for future reference",
+        "Send important health-related alerts if you choose to receive them"
+      ]
+    },
+    dataProtection: {
+      title: "Data Protection",
+      intro: "We apply strict security measures to protect your data:",
+      items: [
+        "Encryption of sensitive medical data",
+        "Storage on secure servers",
+        "Restricted access for authorized personnel only",
+        "Regular data backups",
+        "Ongoing review of security procedures"
+      ]
+    },
+    informationSharing: {
+      title: "Information Sharing",
+      strong:
+        "We do not sell or rent your personal information to third parties.",
+      intro: "Your information may only be shared in the following cases:",
+      items: [
+        "With your explicit consent",
+        "With service providers acting on our behalf under confidentiality obligations",
+        "When required by law or court order",
+        "To protect your safety or the safety of others"
+      ]
+    },
+    yourRights: {
+      title: "Your Rights",
+      intro: "You have the following rights regarding your data:",
+      items: [
+        "Access your personal data",
+        "Correct inaccurate information",
+        "Delete your account and data, noting this may affect service availability",
+        "Export your data in a readable format",
+        "Withdraw consent to data processing"
+      ]
+    },
+    medicalDisclaimer: {
+      title: "Medical Disclaimer",
+      strong:
+        "Important: HealthCare is a support tool and does not replace professional medical advice.",
+      items: [
+        "The information provided is for informational purposes only",
+        "It does not constitute a final medical diagnosis",
+        "A qualified physician should be consulted for diagnosis and treatment",
+        "Do not disregard professional medical advice based on platform information"
+      ]
+    },
+    policyChanges: {
+      title: "Changes to This Policy",
+      intro:
+        "We may update this Privacy Policy from time to time. Important changes may be communicated through:",
+      items: [
+        "Publishing the updated policy on the platform",
+        "Sending an email if the changes are material",
+        "Updating the “Last updated” date at the top of the page"
+      ]
+    }
+  },
+  contact: {
+    title: "Have questions?",
+    description:
+      "If you have any questions about this Privacy Policy, please contact us."
+  }
+}
 };
 
 export default en;

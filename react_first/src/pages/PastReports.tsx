@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Loader2,
   AlertTriangle,
   FileText,
   CalendarDays,
@@ -43,6 +42,7 @@ export default function PastReports() {
   const { user, isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
+  const actionsLabel = isArabic ? "الإجراءات" : "Actions";
 
   const heroRef = useRef(null);
   const contentRef = useRef(null);
@@ -86,8 +86,10 @@ export default function PastReports() {
 
     if (isAuthenticated && user) {
       fetchPredictions();
+    } else {
+      setIsLoading(false);
     }
-  }, [isAuthenticated, user, t]);
+  }, [isAuthenticated, user]);
 
   const formatNumber = (
     value: number,
@@ -256,16 +258,114 @@ export default function PastReports() {
     }
   }, [currentPage, totalPages]);
 
+  const LoadingSkeleton = () => {
+    return (
+      <div className="w-full max-w-none space-y-8 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((item) => (
+            <Card
+              key={item}
+              className="p-5 shadow-sm border-0 bg-background rounded-3xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-muted" />
+                <div className="flex-1">
+                  <div className="h-3 w-24 bg-muted rounded mb-3" />
+                  <div className="h-8 w-32 bg-muted rounded" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="w-full max-w-none rounded-[26px] border bg-background p-5 md:p-6 shadow-sm overflow-hidden">
+          <div className="hidden lg:block w-full overflow-hidden rounded-[22px] border">
+            <div className="grid grid-cols-[2fr_1.45fr_1.05fr_.75fr_1.1fr] gap-4 bg-muted/30 px-5 py-4">
+              {[1, 2, 3, 4, 5].map((item) => (
+                <div key={item} className="h-4 w-28 bg-muted rounded" />
+              ))}
+            </div>
+
+            {[1, 2, 3, 4, 5].map((row) => (
+              <div
+                key={row}
+                className="grid grid-cols-[2fr_1.45fr_1.05fr_.75fr_1.1fr] gap-4 items-center px-5 py-5 border-t"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-muted" />
+                  <div>
+                    <div className="h-5 w-28 bg-muted rounded mb-2" />
+                    <div className="h-4 w-20 bg-muted rounded" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="h-4 w-32 bg-muted rounded" />
+                  <div className="h-4 w-28 bg-muted rounded" />
+                  <div className="h-4 w-24 bg-muted rounded" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="h-4 w-24 bg-muted rounded" />
+                  <div className="h-3 w-20 bg-muted rounded" />
+                </div>
+
+                <div className="h-7 w-16 bg-muted rounded-full" />
+
+                <div className="mx-auto h-10 w-28 bg-muted rounded-xl" />
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 lg:hidden">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="rounded-[20px] border p-4 bg-background"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="h-11 w-11 rounded-xl bg-muted shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="h-3 w-36 bg-muted rounded mb-2" />
+                    <div className="h-5 w-24 bg-muted rounded mb-2" />
+                    <div className="h-4 w-16 bg-muted rounded mb-4" />
+
+                    <div className="rounded-xl bg-muted/40 p-3 mb-3">
+                      <div className="h-3 w-28 bg-muted rounded mb-3" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-32 bg-muted rounded" />
+                        <div className="h-4 w-28 bg-muted rounded" />
+                        <div className="h-4 w-24 bg-muted rounded" />
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-muted/40 p-3 mb-4">
+                      <div className="h-3 w-16 bg-muted rounded mb-3" />
+                      <div className="h-4 w-28 bg-muted rounded mb-2" />
+                      <div className="h-3 w-20 bg-muted rounded" />
+                    </div>
+
+                    <div className="h-10 w-full bg-muted rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   if (!isAuthenticated) {
     return (
       <div
-        className="min-h-screen flex flex-col bg-background"
+        className="min-h-screen flex flex-col bg-background overflow-x-hidden"
         dir={isArabic ? "rtl" : "ltr"}
       >
         <Header variant="dashboard" />
 
         <main
-          className="flex-1 container mx-auto px-4 flex items-center justify-center"
+          className="flex-1 w-full max-w-none px-4 sm:px-5 lg:px-6 flex items-center justify-center overflow-x-hidden"
           style={{
             paddingTop: `${DESKTOP_HEADER_HEIGHT + 32}px`,
             paddingBottom: "32px",
@@ -286,20 +386,20 @@ export default function PastReports() {
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-slate-50"
+      className="min-h-screen flex flex-col bg-slate-50 overflow-x-hidden"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <Header variant="dashboard" />
 
       <main
-        className="flex-1"
+        className="flex-1 w-full max-w-none overflow-x-hidden"
         style={{ paddingTop: `${DESKTOP_HEADER_HEIGHT}px` }}
       >
-        <section className="border-b bg-background">
-          <div className="container mx-auto px-4 py-8 md:py-10">
+        <section className="w-full border-b bg-background overflow-x-hidden">
+          <div className="w-full max-w-none px-4 sm:px-5 lg:px-6 py-8 md:py-10">
             <div
               ref={heroRef}
-              className={`transition-all duration-700 ease-out ${
+              className={`transform-gpu transition-all duration-700 ease-out ${
                 heroVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-10"
@@ -317,25 +417,16 @@ export default function PastReports() {
           </div>
         </section>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full max-w-none px-4 sm:px-5 lg:px-6 py-8 overflow-x-hidden">
           <div
             ref={contentRef}
-            className={`transition-all duration-700 ease-out ${
+            className={`w-full max-w-none transform-gpu transition-all duration-700 ease-out ${
               contentVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-10"
             }`}
           >
-            {isLoading && (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center">
-                  <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    {t("pastReportsPage.loading")}
-                  </p>
-                </div>
-              </div>
-            )}
+            {isLoading && <LoadingSkeleton />}
 
             {error && !isLoading && (
               <Alert className="bg-red-50 border-red-200 mb-6">
@@ -359,8 +450,8 @@ export default function PastReports() {
             )}
 
             {!isLoading && !error && sortedPredictions.length > 0 && (
-              <div className="space-y-8">
-                <div className="grid md:grid-cols-3 gap-4">
+              <div className="w-full max-w-none space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card className="p-5 shadow-sm border-0 bg-background rounded-3xl">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -414,9 +505,9 @@ export default function PastReports() {
                   </Card>
                 </div>
 
-                <Card className="rounded-[26px] border bg-background p-5 md:p-6 shadow-sm">
-                  <div className="hidden lg:block overflow-x-auto">
-                    <div className="min-w-[1080px] overflow-hidden rounded-[22px] border">
+                <Card className="w-full max-w-none rounded-[26px] border bg-background p-5 md:p-6 shadow-sm overflow-hidden">
+                  <div className="hidden lg:block w-full overflow-x-auto">
+                    <div className="min-w-[1080px] w-full overflow-hidden rounded-[22px] border">
                       <div className="grid grid-cols-[2fr_1.45fr_1.05fr_.75fr_1.1fr] gap-4 bg-muted/30 px-5 py-4 text-sm font-semibold text-muted-foreground">
                         <span className="text-start">
                           {t("pastReportsPage.infectionProbability")}
@@ -430,12 +521,8 @@ export default function PastReports() {
                         <span className="text-start whitespace-nowrap">
                           {t("pastReportsPage.reportId")}
                         </span>
-                        <span
-                          className={`whitespace-nowrap ${
-                            isArabic ? "text-left" : "text-right"
-                          }`}
-                        >
-                          {t("pastReportsPage.viewReport")}
+                        <span className="flex items-center justify-center whitespace-nowrap">
+                          {actionsLabel}
                         </span>
                       </div>
 
@@ -521,11 +608,7 @@ export default function PastReports() {
                               </div>
                             </div>
 
-                            <div
-                              className={`flex items-center gap-2 ${
-                                isArabic ? "justify-start" : "justify-end"
-                              }`}
-                            >
+                            <div className="flex items-center justify-center gap-2">
                               <Link
                                 to="/report"
                                 state={{
@@ -569,12 +652,16 @@ export default function PastReports() {
                           key={pred.id}
                           className="rounded-[20px] border p-4 bg-background transition-all duration-300 ease-out"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-start gap-3">
                             <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                               <Activity className="h-5 w-5 text-primary" />
                             </div>
 
                             <div className="min-w-0 flex-1">
+                              <p className="text-xs text-muted-foreground mb-1">
+                                {t("pastReportsPage.infectionProbability")}
+                              </p>
+
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="font-semibold leading-snug">
                                   {formatNumber(pred.probability, {

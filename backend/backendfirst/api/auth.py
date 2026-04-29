@@ -500,7 +500,7 @@ def password_reset_request(request):
         reset_link = f"http://localhost:5173/reset-password/{uid}/{token}/"
         
         # محتوى الإيميل
-        subject = "إعادة تعيين كلمة المرور - HealthAI"
+        subject = "إعادة تعيين كلمة المرور - HealthCare"
         
         message = f"""
 مرحباً {user.first_name or user.email}،
@@ -515,7 +515,7 @@ def password_reset_request(request):
 إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذا البريد.
 
 مع التحية،
-فريق HealthAI
+فريق HealthCare
         """
         
         # إرسال الإيميل

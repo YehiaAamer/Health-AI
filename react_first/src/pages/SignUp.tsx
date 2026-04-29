@@ -50,7 +50,7 @@ const SignUp = () => {
               }`}
             >
               <Activity className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold">HealthAI</span>
+              <span className="text-2xl font-bold">HealthCare</span>
             </div>
 
             <h2

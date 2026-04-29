@@ -267,7 +267,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
               <Link to="/home" className="flex items-center gap-2 w-fit">
                 <Activity className="h-8 w-8 text-primary shrink-0" />
                 <span className="text-xl font-bold whitespace-nowrap">
-                  HealthAI
+                  HealthCare
                 </span>
               </Link>
             </div>
@@ -339,7 +339,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
             <div className="flex items-center justify-between px-4 py-4 border-b">
               <div className="flex items-center gap-2">
                 <Activity className="h-7 w-7 text-primary" />
-                <span className="text-lg font-bold">HealthAI</span>
+                <span className="text-lg font-bold">HealthCare</span>
               </div>
 
               <Button

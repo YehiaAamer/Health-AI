@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   Mail,
   ShieldCheck,
@@ -10,11 +11,18 @@ import {
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
+import { useIsVisible } from "@/hooks/useIsVisible";
 
 const DESKTOP_HEADER_HEIGHT = 72;
 
 const PrivacyPolicy = () => {
   const { t, i18n } = useTranslation();
+
+  const headerRef = useRef(null);
+  const sectionsRef = useRef(null);
+
+  const headerVisible = useIsVisible(headerRef);
+  const sectionsVisible = useIsVisible(sectionsRef);
 
   const isArabic = i18n.language.startsWith("ar");
   const currentLocale = isArabic ? "ar-EG" : "en-US";
@@ -117,20 +125,27 @@ const PrivacyPolicy = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-background"
+      className="min-h-screen flex flex-col bg-background overflow-x-hidden"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <Header />
 
       <main
-        className="flex-1 px-4"
+        className="flex-1 w-full px-4 sm:px-6 lg:px-8"
         style={{
           paddingTop: `${DESKTOP_HEADER_HEIGHT + 40}px`,
           paddingBottom: "56px",
         }}
       >
-        <div className="container mx-auto max-w-6xl">
-          <div className="mb-8 pb-4 border-b">
+        <div className="w-full max-w-7xl mx-auto">
+          <div
+            ref={headerRef}
+            className={`mb-8 pb-4 border-b transition-all duration-700 ease-out ${
+              headerVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               {t("privacy.title")}
             </h1>
@@ -144,7 +159,14 @@ const PrivacyPolicy = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div
+            ref={sectionsRef}
+            className={`grid grid-cols-1 gap-5 lg:grid-cols-2 transition-all duration-700 ease-out delay-100 ${
+              sectionsVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
             {sections.map((section) => (
               <section
                 key={section.id}
@@ -197,11 +219,11 @@ const PrivacyPolicy = () => {
                 </div>
 
                 <a
-                  href="mailto:privacy@healthai.com"
+                  href="mailto:privacy@healthcare.com"
                   className="inline-flex w-fit items-center gap-2 rounded-lg border px-4 py-2.5 text-primary font-medium transition hover:bg-primary/5"
                 >
                   <Mail className="h-4 w-4" />
-                  privacy@healthai.com
+                  privacy@HealthCare.com
                 </a>
               </div>
             </section>

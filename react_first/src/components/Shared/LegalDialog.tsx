@@ -41,7 +41,7 @@ const LegalDialog = ({ open, onOpenChange, onAccept }: LegalDialogProps) => {
           </DialogTitle>
           <DialogDescription className="text-center">
             Before you continue, please review our legal policies. Your
-            agreement is required to use HealthAI.
+            agreement is required to use HealthCare.
           </DialogDescription>
         </DialogHeader>
 

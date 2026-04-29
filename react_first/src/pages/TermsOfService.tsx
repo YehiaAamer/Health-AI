@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   AlertTriangle,
   Mail,
@@ -9,11 +10,22 @@ import {
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Shared/Header";
 import Footer from "@/components/Shared/Footer";
+import { useIsVisible } from "@/hooks/useIsVisible";
 
 const DESKTOP_HEADER_HEIGHT = 72;
 
 const TermsOfService = () => {
   const { t, i18n } = useTranslation();
+
+  const headerRef = useRef(null);
+  const noticeRef = useRef(null);
+  const sectionsRef = useRef(null);
+  const contactRef = useRef(null);
+
+  const headerVisible = useIsVisible(headerRef);
+  const noticeVisible = useIsVisible(noticeRef);
+  const sectionsVisible = useIsVisible(sectionsRef);
+  const contactVisible = useIsVisible(contactRef);
 
   const isArabic = i18n.language.startsWith("ar");
   const currentLocale = isArabic ? "ar-EG" : "en-US";
@@ -129,20 +141,27 @@ const TermsOfService = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-background"
+      className="min-h-screen flex flex-col bg-background overflow-x-hidden"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <Header />
 
       <main
-        className="flex-1 px-4"
+        className="flex-1 w-full px-4 sm:px-6 lg:px-8"
         style={{
           paddingTop: `${DESKTOP_HEADER_HEIGHT + 40}px`,
           paddingBottom: "56px",
         }}
       >
-        <div className="container mx-auto max-w-6xl">
-          <div className="mb-8 pb-4 border-b">
+        <div className="w-full max-w-7xl mx-auto">
+          <div
+            ref={headerRef}
+            className={`mb-8 pb-4 border-b transition-all duration-700 ease-out ${
+              headerVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               {t("terms.title")}
             </h1>
@@ -156,8 +175,15 @@ const TermsOfService = () => {
             </p>
           </div>
 
-          <div className="mb-6 w-full rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 flex items-start gap-2 text-yellow-800 text-sm">
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+          <div
+            ref={noticeRef}
+            className={`mb-6 flex items-start gap-2 text-sm text-yellow-700 transition-all duration-700 ease-out delay-100 ${
+              noticeVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-yellow-600" />
             <p>
               <span className="font-semibold">
                 {t("terms.notice.title")}:
@@ -166,7 +192,14 @@ const TermsOfService = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div
+            ref={sectionsRef}
+            className={`grid grid-cols-1 gap-5 lg:grid-cols-2 transition-all duration-700 ease-out delay-100 ${
+              sectionsVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
             {sections.map((section) => (
               <section
                 key={section.id}
@@ -189,9 +222,9 @@ const TermsOfService = () => {
                   )}
 
                   {section.warning && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
+                    <p className="text-sm font-semibold leading-6 text-red-600">
                       {section.warning}
-                    </div>
+                    </p>
                   )}
 
                   <ul
@@ -220,7 +253,14 @@ const TermsOfService = () => {
             ))}
           </div>
 
-          <section className="mt-6 rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+          <section
+            ref={contactRef}
+            className={`mt-6 rounded-xl border bg-card p-6 shadow-sm transition-all duration-700 ease-out delay-200 hover:-translate-y-1 hover:shadow-md ${
+              contactVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-foreground mb-2">
@@ -232,11 +272,11 @@ const TermsOfService = () => {
               </div>
 
               <a
-                href="mailto:legal@healthai.com"
+                href="mailto:legal@healthcare.com"
                 className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-primary font-medium transition hover:bg-primary/5"
               >
                 <Mail className="h-4 w-4" />
-                legal@healthai.com
+                legal@HealthCare.com
               </a>
             </div>
           </section>

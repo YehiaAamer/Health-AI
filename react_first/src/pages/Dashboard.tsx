@@ -505,7 +505,7 @@ const Dashboard = () => {
                 {user?.first_name || user?.email || "User"}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {user?.email || "HealthAI Account"}
+                {user?.email || "HealthCare Account"}
               </p>
             </div>
           </div>
@@ -739,8 +739,8 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                <div className="relative w-full md:w-[280px] lg:w-[320px]">
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:max-w-[560px]">
+                <div className="relative w-full min-w-0">
                   <Search
                     className={`h-4 w-4 text-muted-foreground absolute top-1/2 -translate-y-1/2 ${
                       isArabic ? "right-3" : "left-3"
@@ -750,7 +750,7 @@ const Dashboard = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t("dashboard.search")}
-                    className={`rounded-xl h-11 ${
+                    className={`rounded-xl h-11 w-full ${
                       isArabic
                         ? "pr-9 pl-10 text-right"
                         : "pl-9 pr-10 text-left"
@@ -770,8 +770,8 @@ const Dashboard = () => {
                   )}
                 </div>
 
-                <Link to="/diagnosis">
-                  <Button className="rounded-xl gap-2 h-11 w-full sm:w-auto">
+                <Link to="/diagnosis" className="w-full sm:w-auto">
+                  <Button className="rounded-xl gap-2 h-11 w-full sm:w-auto whitespace-nowrap">
                     <Plus className="h-5 w-5" />
                     {t("dashboard.newTest")}
                   </Button>
@@ -787,8 +787,8 @@ const Dashboard = () => {
                   : "opacity-0 translate-y-6"
               }`}
             >
-              <Card className="rounded-[20px] border bg-card p-5 shadow-sm">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+              <Card className="group rounded-[20px] border bg-card p-5 shadow-sm transition-all duration-300 ease-out hover:bg-primary/5 hover:border-primary/25 hover:shadow-md">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-primary/15">
                   <Activity className="h-5 w-5 text-primary" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
@@ -804,8 +804,8 @@ const Dashboard = () => {
                 </h3>
               </Card>
 
-              <Card className="rounded-[20px] border bg-card p-5 shadow-sm">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+              <Card className="group rounded-[20px] border bg-card p-5 shadow-sm transition-all duration-300 ease-out hover:bg-primary/5 hover:border-primary/25 hover:shadow-md">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-primary/15">
                   <ShieldCheck className="h-5 w-5 text-primary" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
@@ -818,8 +818,8 @@ const Dashboard = () => {
                 </h3>
               </Card>
 
-              <Card className="rounded-[20px] border bg-card p-5 shadow-sm">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+              <Card className="group rounded-[20px] border bg-card p-5 shadow-sm transition-all duration-300 ease-out hover:bg-primary/5 hover:border-primary/25 hover:shadow-md">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-primary/15">
                   <FileText className="h-5 w-5 text-primary" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
@@ -830,8 +830,8 @@ const Dashboard = () => {
                 </h3>
               </Card>
 
-              <Card className="rounded-[20px] border bg-card p-5 shadow-sm">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+              <Card className="group rounded-[20px] border bg-card p-5 shadow-sm transition-all duration-300 ease-out hover:bg-primary/5 hover:border-primary/25 hover:shadow-md">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-primary/15">
                   <Clock3 className="h-5 w-5 text-primary" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
@@ -1307,11 +1307,7 @@ const Dashboard = () => {
                           <span className="text-start whitespace-nowrap">
                             {t("dashboard.date")}
                           </span>
-                          <span
-                            className={`whitespace-nowrap ${
-                              isArabic ? "text-left" : "text-right"
-                            }`}
-                          >
+                          <span className="text-center whitespace-nowrap">
                             {t("dashboard.action")}
                           </span>
                         </div>
@@ -1380,11 +1376,7 @@ const Dashboard = () => {
                                 </p>
                               </div>
 
-                              <div
-                                className={`flex items-center gap-2 ${
-                                  isArabic ? "justify-start" : "justify-end"
-                                }`}
-                              >
+                              <div className="flex items-center justify-center gap-2">
                                 <Link
                                   to="/report"
                                   state={{
@@ -1487,11 +1479,7 @@ const Dashboard = () => {
                                   </p>
                                 </div>
 
-                                <div className="mt-4 rounded-xl bg-muted/30 p-3">
-                                  <p className="text-xs text-muted-foreground mb-2">
-                                    {t("dashboard.action")}
-                                  </p>
-
+                                <div className="mt-4">
                                   <Link
                                     to="/report"
                                     state={{
