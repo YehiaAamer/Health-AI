@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from .models import Prediction, ChatMessage
+from .models import Prediction, ChatbotSession, ChatbotMessage
 from .xgboost_client import predict_diabetes_xgboost, get_feature_importance
 # Medgamma imports for Chatbot only
 from .medgamma_client import chatbot_chat, MedgammaError
@@ -14,7 +14,7 @@ from .medgamma_client import chatbot_chat, MedgammaError
 # ═══════════════════════════════════════════════════════════════
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def predict_diabetes(request):
     """
     التنبؤ بالسكري باستخدام XGBoost فقط
@@ -69,7 +69,7 @@ def predict_diabetes(request):
         # حفظ في قاعدة البيانات
         # ─────────────────────────────────────────────
         prediction = Prediction.objects.create(
-            user=request.user if request.user.is_authenticated else None,
+            patient_user=request.user,
             pregnancies=features.get('pregnancies', 0),
             glucose=features.get('glucose', 85),
             blood_pressure=features.get('blood_pressure', 70),
@@ -266,7 +266,7 @@ def _get_fallback_response(user_message: str) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def chatbot_predict(request):
     """
     محادثة مع Chatbot الطبي (Medgamma)
@@ -292,7 +292,10 @@ def chatbot_predict(request):
         # جلب التحليل السابق
         if prediction_id:
             try:
-                prediction = Prediction.objects.get(id=prediction_id)
+                prediction = Prediction.objects.get(
+                    id=prediction_id,
+                    patient_user=request.user,
+                )
                 features = {
                     'glucose': prediction.glucose,
                     'blood_pressure': prediction.blood_pressure,
@@ -308,7 +311,7 @@ def chatbot_predict(request):
         else:
             # لو مفيش prediction_id، نجيب آخر تحليل للمستخدم
             if request.user.is_authenticated:
-                last_prediction = Prediction.objects.filter(user=request.user).first()
+                last_prediction = Prediction.objects.filter(patient_user=request.user).first()
                 if last_prediction:
                     prediction = last_prediction
                     prediction_id = last_prediction.id
@@ -343,9 +346,20 @@ def chatbot_predict(request):
         
         # جلب تاريخ المحادثة إذا موجود
         conversation_history = []
+        session = None
         if conversation_id:
-            messages = ChatMessage.objects.filter(
-                conversation_id=conversation_id
+            try:
+                session = ChatbotSession.objects.get(
+                    id=conversation_id,
+                    patient_user=request.user,
+                )
+            except ChatbotSession.DoesNotExist:
+                return Response({
+                    "error": "Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø© ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯Ø©"
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            messages = ChatbotMessage.objects.filter(
+                session=session
             ).order_by('created_at')[:10]
             
             conversation_history = [
@@ -357,9 +371,8 @@ def chatbot_predict(request):
         # استدعاء Chatbot
         # ─────────────────────────────────────────────
         try:
-            print(f"[CHATBOT] Calling MedGemma with: {user_message}")
-            print(f"[CHATBOT] Features: {features}")
-            print(f"[CHATBOT] Probability: {probability}%, Risk: {risk_level}")
+            # Avoid printing Arabic/user content to Windows console (can raise charmap encoding errors).
+            print(f"[CHATBOT] Calling MedGemma (prediction_id={prediction_id}, conversation_id={conversation_id})")
             
             bot_response = chatbot_chat(
                 features=features,
@@ -368,14 +381,12 @@ def chatbot_predict(request):
                 question=user_message,
                 conversation_history=conversation_history if conversation_history else None
             )
-            
-            print(f"[CHATBOT] MedGemma response: {bot_response}")
         except MedgammaError as me:
-            print(f"[CHATBOT ERROR] Medgamma error: {str(me)}")
+            print("[CHATBOT ERROR] Medgamma error")
             # لو MedGemma فشل، نرجع error واضح
             bot_response = f"عذراً، هناك مشكلة في الاتصال بالمساعد الطبي. يرجى المحاولة لاحقاً. (خطأ: {str(me)})"
         except Exception as e:
-            print(f"[CHATBOT ERROR] Unexpected error: {str(e)}")
+            print("[CHATBOT ERROR] Unexpected error")
             bot_response = f"عذراً، حدث خطأ غير متوقع. يرجى المحاولة لاحقاً. (خطأ: {str(e)})"
         
         # ─────────────────────────────────────────────
@@ -383,25 +394,25 @@ def chatbot_predict(request):
         # ─────────────────────────────────────────────
         if not conversation_id:
             # إنشاء محادثة جديدة
-            conversation_id = prediction_id if prediction_id else 1
+            session = ChatbotSession.objects.create(
+                patient_user=request.user,
+                prediction=prediction if prediction_id else None,
+            )
+            conversation_id = session.id
         
         # حفظ رسالة المستخدم
-        if prediction_id:
-            ChatMessage.objects.create(
-                conversation_id=conversation_id,
-                prediction_id=prediction_id,
-                role='user',
-                content=user_message
-            )
+        ChatbotMessage.objects.create(
+            session=session,
+            role='user',
+            content=user_message
+        )
         
         # حفظ رد البوت
-        if prediction_id:
-            ChatMessage.objects.create(
-                conversation_id=conversation_id,
-                prediction_id=prediction_id,
-                role='assistant',
-                content=bot_response
-            )
+        assistant_chat_message = ChatbotMessage.objects.create(
+            session=session,
+            role='assistant',
+            content=bot_response
+        )
         
         # ─────────────────────────────────────────────
         # الاستجابة
@@ -411,13 +422,11 @@ def chatbot_predict(request):
             "prediction_id": prediction_id,
             "user_message": user_message,
             "bot_response": bot_response,
-            "timestamp": ChatMessage.objects.filter(
-                conversation_id=conversation_id
-            ).latest('created_at').created_at.isoformat() if prediction_id else None
+            "timestamp": assistant_chat_message.created_at.isoformat()
         })
 
     except Exception as e:
-        print(f"[ERROR] Chatbot error: {str(e)}")
+        print("[ERROR] Chatbot error")
         return Response({
             "error": f"حدث خطأ: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -448,7 +457,7 @@ def get_conversation_history(request, conversation_id):
 def get_past_predictions(request):
     """جلب جميع التحاليل السابقة للمستخدم الحالي"""
     try:
-        predictions = Prediction.objects.filter(user=request.user)
+        predictions = Prediction.objects.filter(patient_user=request.user)
 
         data = []
         for pred in predictions:
@@ -493,9 +502,9 @@ def get_all_predictions(request):
             data.append({
                 "id": pred.id,
                 "user": {
-                    "id": pred.user.id if pred.user else None,
-                    "username": pred.user.username if pred.user else "Anonymous",
-                    "email": pred.user.email if pred.user else None
+                    "id": pred.patient_user.id if pred.patient_user else None,
+                    "username": pred.patient_user.username if pred.patient_user else "Anonymous",
+                    "email": pred.patient_user.email if pred.patient_user else None
                 },
                 "pregnancies": pred.pregnancies,
                 "glucose": pred.glucose,
