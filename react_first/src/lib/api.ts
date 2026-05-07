@@ -7,7 +7,32 @@ export const API_ENDPOINTS = {
   GET_PREDICTIONS: `${API_BASE_URL}/api/predictions/`,
   HISTORY: `${API_BASE_URL}/api/history/`,
   PROFILE: `${API_BASE_URL}/api/profile/`,
+  
+  // Doctor Endpoints
+  DOCTOR_DASHBOARD: `${API_BASE_URL}/api/doctor/dashboard/`,
+  DOCTOR_PENDING_PREDICTIONS: `${API_BASE_URL}/api/doctor/predictions/pending/`,
+  DOCTOR_REVIEW_PREDICTION: (id: number) => `${API_BASE_URL}/api/doctor/predictions/${id}/review/`,
+  DOCTOR_RISK_DISTRIBUTION: `${API_BASE_URL}/api/doctor/risk-distribution/`,
+  DOCTOR_PATIENTS: `${API_BASE_URL}/api/doctor/patients/`,
+  DOCTOR_APPOINTMENTS_TODAY: `${API_BASE_URL}/api/doctor/appointments/today/`,
+  DOCTOR_MESSAGES: `${API_BASE_URL}/api/doctor/messages/recent/`,
+  DOCTOR_ACTIVITY: `${API_BASE_URL}/api/doctor/activity/`,
+  DOCTOR_PROFILE: `${API_BASE_URL}/api/doctor/profile/`,
+  DOCTOR_NOTIFICATIONS: `${API_BASE_URL}/api/doctor/notifications/`,
 } as const;
+
+const PUBLIC_ENDPOINTS = [
+  "/api/predict/",
+  "/api/chatbot/",
+  "/api/feature-importance/",
+  "/api/ollama/health/",
+];
+
+function isPublicEndpoint(endpoint: string): boolean {
+  return PUBLIC_ENDPOINTS.some((publicEndpoint) =>
+    endpoint.includes(publicEndpoint)
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════
 // Custom API Error Class
@@ -183,14 +208,29 @@ export async function apiCall<T>(
           signal: controller.signal,
         });
 
-        console.log(`📥 Response status: ${response.status}`);
+        const finalResponse =
+          response.status === 401 &&
+          headers.has("Authorization") &&
+          isPublicEndpoint(endpoint)
+            ? await fetch(endpoint, {
+                ...fetchOptions,
+                headers: new Headers(
+                  Array.from(headers.entries()).filter(
+                    ([key]) => key.toLowerCase() !== "authorization"
+                  )
+                ),
+                signal: controller.signal,
+              })
+            : response;
+
+        console.log(`📥 Response status: ${finalResponse.status}`);
         clearTimeout(timeoutId);
 
         // ─────────────────────────────────────────────
         // 4. معالجة الأخطاء based on status code
         // ─────────────────────────────────────────────
-        if (!response.ok) {
-          await handleErrorResponse(response, endpoint);
+        if (!finalResponse.ok) {
+          await handleErrorResponse(finalResponse, endpoint);
         }
 
         // ─────────────────────────────────────────────
@@ -199,11 +239,11 @@ export async function apiCall<T>(
         let responseData: T;
 
         try {
-          responseData = await response.json();
+          responseData = await finalResponse.json();
         } catch (parseError) {
           throw new APIError(
             "INVALID_JSON",
-            response.status,
+            finalResponse.status,
             parseError as Error,
             "الخادم رجع استجابة غير صحيحة"
           );

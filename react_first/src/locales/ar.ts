@@ -1,6 +1,63 @@
 const ar = {
   home: "الرئيسية",
 
+  doctorDashboard: {
+    welcome: "مرحباً",
+    subtitle: "نظرة عامة على مرضاك وتحليلاتهم",
+    searchPlaceholder: "ابحث عن مريض...",
+    sidebar: {
+      title: "بوابة الطبيب",
+      overview: "الرئيسية",
+      patients: "المرضى",
+      appointments: "المواعيد",
+      reports: "التقارير",
+      messages: "الرسائل",
+      settings: "الإعدادات",
+      help: "المساعدة",
+      doctorPortal: "بوابة الطبيب",
+    },
+    stats: {
+      totalPatients: "إجمالي المرضى",
+      pendingReviews: "مراجعات معلقة",
+      todayAppointments: "مواعيد اليوم",
+      totalPredictions: "التحليلات الكلية",
+      thisMonth: "هذا الشهر",
+      fromYesterday: "منذ الأمس",
+    },
+    pendingReviews: {
+      title: "التحليلات بانتظار المراجعة",
+      viewAll: "عرض الكل",
+      empty: "لا توجد تحليلات معلقة حالياً.",
+      patient: "المريض",
+      riskLevel: "مستوى الخطورة",
+      date: "التاريخ",
+      action: "إجراء",
+      reviewBtn: "مراجعة",
+    },
+    riskChart: {
+      title: "توزيع مستويات الخطورة",
+      empty: "لا توجد بيانات كافية للرسم البياني",
+      patients: "مرضى",
+    },
+    appointments: {
+      title: "مواعيد اليوم",
+      viewAll: "عرض الكل",
+      empty: "لا توجد مواعيد متبقية لليوم.",
+    },
+    reports: {
+      title: "التقارير",
+      viewAll: "عرض الكل",
+      monthlySummary: "الملخص الشهري",
+      riskAnalysis: "تحليل الخطورة",
+      patientDemographics: "التركيبة السكانية",
+      generateNew: "إنشاء تقرير جديد",
+    },
+    activity: {
+      title: "النشاط الأخير",
+      empty: "لا توجد نشاطات حديثة.",
+    },
+  },
+
   dashboard: {
   title: "لوحة التحكم",
   welcome: "أهلاً بعودتك",

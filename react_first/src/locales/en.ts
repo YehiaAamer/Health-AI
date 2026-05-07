@@ -1,6 +1,63 @@
 const en = {
   home: "Home",
 
+  doctorDashboard: {
+    welcome: "Welcome",
+    subtitle: "Overview of your patients and their analyses",
+    searchPlaceholder: "Search for a patient...",
+    sidebar: {
+      title: "Doctor Portal",
+      overview: "Overview",
+      patients: "Patients",
+      appointments: "Appointments",
+      reports: "Reports",
+      messages: "Messages",
+      settings: "Settings",
+      help: "Help",
+      doctorPortal: "Doctor Portal",
+    },
+    stats: {
+      totalPatients: "Total Patients",
+      pendingReviews: "Pending Reviews",
+      todayAppointments: "Today's Appointments",
+      totalPredictions: "Total Predictions",
+      thisMonth: "This Month",
+      fromYesterday: "From Yesterday",
+    },
+    pendingReviews: {
+      title: "Pending Reviews",
+      viewAll: "View All",
+      empty: "No pending reviews at the moment.",
+      patient: "Patient",
+      riskLevel: "Risk Level",
+      date: "Date",
+      action: "Action",
+      reviewBtn: "Review",
+    },
+    riskChart: {
+      title: "Risk Distribution",
+      empty: "Not enough data for chart",
+      patients: "patients",
+    },
+    appointments: {
+      title: "Today's Appointments",
+      viewAll: "View All",
+      empty: "No remaining appointments for today.",
+    },
+    reports: {
+      title: "Reports",
+      viewAll: "View All",
+      monthlySummary: "Monthly Summary",
+      riskAnalysis: "Risk Analysis",
+      patientDemographics: "Demographics",
+      generateNew: "Generate New Report",
+    },
+    activity: {
+      title: "Recent Activity",
+      empty: "No recent activities.",
+    },
+  },
+
 dashboard: {
   title: "Dashboard",
   welcome: "Welcome back",

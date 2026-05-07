@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import LoadingDots from "@/components/Shared/LoadingDots";
+import LoadingDots from "@/components/shared/LoadingDots";
 
 type GlobalLoaderContextType = {
   show: (autoHideMs?: number) => void;

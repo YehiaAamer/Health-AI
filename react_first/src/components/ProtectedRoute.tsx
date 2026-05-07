@@ -2,7 +2,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
-import LoadingDots from '@/components/Shared/LoadingDots';
+import LoadingDots from '@/components/shared/LoadingDots';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -43,10 +43,15 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
   // التحقق من الـ role (اختياري)
   if (requiredRole && user) {
-    // يمكنك إضافة logic هنا للتحقق من الـ role
-    // if (user.role !== requiredRole) {
-    //   return <Navigate to="/" replace />;
-    // }
+    if (user.role !== requiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    // Check doctor status if required role is doctor
+    if (requiredRole === 'doctor' && user.doctor_status !== 'approved') {
+      // You could redirect to a 'pending approval' page here instead
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;

@@ -1,6 +1,6 @@
 # api/urls.py
-from django.urls import path
-from .views import (
+from django.urls import path, include
+from .views.patient_views import (
     predict_diabetes,
     get_past_predictions,
     get_all_predictions,
@@ -9,7 +9,7 @@ from .views import (
     chatbot_predict,
     get_conversation_history,
 )
-from .auth import register, login, logout, get_current_user, update_profile, delete_profile_picture, password_reset_request, password_reset_confirm
+from .views.auth_views import register, login, logout, get_current_user, update_profile, delete_profile_picture, password_reset_request, password_reset_confirm
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -44,4 +44,9 @@ urlpatterns = [
     # Health Check Endpoints
     # ────────────────────────────────────────────────
     path('ollama/health/', ollama_health, name='ollama_health'),
+
+    # ────────────────────────────────────────────────
+    # Doctor Dashboard Endpoints
+    # ────────────────────────────────────────────────
+    path('doctor/', include('api.doctor_urls')),
 ]

@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from cloudinary.models import CloudinaryField
+
 
 
 class UserProfile(models.Model):
@@ -46,8 +46,8 @@ class UserProfile(models.Model):
     )
     phone = models.CharField(max_length=20, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
-    profile_picture = CloudinaryField(
-        "profile_picture",
+    profile_picture = models.CharField(
+        max_length=255,
         null=True,
         blank=True,
     )
@@ -169,8 +169,6 @@ class Prediction(models.Model):
     patient_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="predictions",
     )
     assignment = models.ForeignKey(
@@ -365,3 +363,65 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Appointment(models.Model):
+    STATUS_SCHEDULED = "scheduled"
+    STATUS_COMPLETED = "completed"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_NO_SHOW = "no_show"
+    STATUS_CHOICES = [
+        (STATUS_SCHEDULED, "Scheduled"),
+        (STATUS_COMPLETED, "Completed"),
+        (STATUS_CANCELLED, "Cancelled"),
+        (STATUS_NO_SHOW, "No Show"),
+    ]
+
+    TYPE_INITIAL = "initial"
+    TYPE_FOLLOW_UP = "follow_up"
+    TYPE_REVIEW = "review"
+    TYPE_CHOICES = [
+        (TYPE_INITIAL, "Initial Consultation"),
+        (TYPE_FOLLOW_UP, "Follow-up"),
+        (TYPE_REVIEW, "Prediction Review"),
+    ]
+
+    doctor_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="doctor_appointments",
+    )
+    patient_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="patient_appointments",
+    )
+    prediction = models.ForeignKey(
+        Prediction,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="appointments",
+    )
+    appointment_date = models.DateField()
+    appointment_time = models.TimeField()
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_SCHEDULED,
+    )
+    appointment_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default=TYPE_FOLLOW_UP,
+    )
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "appointment"
+        ordering = ["appointment_date", "appointment_time"]
+
+    def __str__(self):
+        return f"Appointment #{self.id} - {self.appointment_date} {self.appointment_time}"

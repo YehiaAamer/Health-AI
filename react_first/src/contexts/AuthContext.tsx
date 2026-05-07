@@ -17,6 +17,8 @@ export interface User {
   profile_picture?: string | null;
   bio?: string | null;
   phone?: string | null;
+  role?: "patient" | "doctor" | "admin";
+  doctor_status?: "pending" | "approved" | "rejected" | "suspended" | null;
 }
 
 export interface TokenPair {
@@ -35,9 +37,10 @@ export interface AuthContextType {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
-  ) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+    lastName: string,
+    role?: string
+  ) => Promise<User>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   clearError: () => void;
@@ -124,7 +127,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       email: string,
       password: string,
       firstName: string,
-      lastName: string
+      lastName: string,
+      role?: string
     ) => {
       setIsLoading(true);
       setError(null);
@@ -143,6 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             password,
             first_name: firstName,
             last_name: lastName,
+            role: role || 'patient',
           }),
         });
 
@@ -157,6 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(response.user);
 
         console.log("✅ تم التسجيل بنجاح:", response.user.email);
+        return response.user;
       } catch (error: unknown) {
         const message =
           (error instanceof Error ? error.message : String(error)) ||
@@ -215,6 +221,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("✅ تم تسجيل الدخول بنجاح:", response.user.email);
       console.log("✅ Stored tokens:", response.tokens);
       console.log("✅ Stored user:", response.user);
+      return response.user;
     } catch (error: unknown) {
       const message =
         (error instanceof Error ? error.message : String(error)) ||

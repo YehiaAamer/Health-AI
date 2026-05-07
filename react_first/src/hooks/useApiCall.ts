@@ -1,6 +1,6 @@
 // useApiCall.ts - Custom hook for API calls with better error handling
 import { useState, useCallback } from 'react';
-import { apiCall, APIError, getErrorMessage } from './api';
+import { apiCall, APIError, getErrorMessage } from '../lib/api';
 
 interface UseApiCallState<T> {
   data: T | null;
