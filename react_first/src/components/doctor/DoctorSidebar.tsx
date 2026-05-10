@@ -32,7 +32,7 @@ export default function DoctorSidebar({ className }: DoctorSidebarProps) {
     { icon: Users, label: t('doctorDashboard.sidebar.patients'), path: '/doctor-dashboard/patients' },
     { icon: Calendar, label: t('doctorDashboard.sidebar.appointments'), path: '/doctor-dashboard/appointments' },
     { icon: FileText, label: t('doctorDashboard.sidebar.reports'), path: '/doctor-dashboard/reports' },
-    { icon: MessageSquare, label: t('doctorDashboard.sidebar.messages'), path: '/doctor-dashboard/messages', badge: 3 },
+    { icon: MessageSquare, label: t('doctorDashboard.sidebar.messages.title'), path: '/doctor-dashboard/messages', badge: 3 },
     { icon: Settings, label: t('doctorDashboard.sidebar.settings'), path: '/doctor-dashboard/settings' },
     { icon: HelpCircle, label: t('doctorDashboard.sidebar.help'), path: '/doctor-dashboard/help' },
   ];
