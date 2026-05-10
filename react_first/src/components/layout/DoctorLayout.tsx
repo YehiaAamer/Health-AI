@@ -41,13 +41,13 @@ export default function DoctorLayout() {
     <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="flex flex-1 overflow-hidden">
         <DoctorSidebar className="shrink-0" />
-        
+
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Header */}
           <header className="bg-card border-b px-6 py-4 flex items-center justify-between sticky top-0 z-20">
             <div>
               <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
-                HealthCare AI <span className="text-muted-foreground font-normal text-sm ml-2">| {t('doctorDashboard.sidebar.doctorPortal')}</span>
+                Health-Care  <span className="text-muted-foreground font-normal text-sm ml-2">| {t('doctorDashboard.sidebar.doctorPortal')}</span>
               </h1>
             </div>
 
@@ -91,7 +91,7 @@ export default function DoctorLayout() {
           </main>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );
