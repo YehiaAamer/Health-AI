@@ -36,7 +36,7 @@ interface Appointment {
 
 export default function AppointmentsPage() {
   const { t, i18n } = useTranslation();
-  const apiCall = useApiCall();
+  const { execute: apiCall } = useApiCall();
   const isArabic = i18n.language === "ar";
   
   const [loading, setLoading] = useState(true);

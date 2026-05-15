@@ -15,7 +15,7 @@ export default function DoctorLayout() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const apiCall = useApiCall();
+  const { execute: apiCall } = useApiCall();
   const isRTL = i18n.language === "ar";
 
   const [stats, setStats] = useState<any>(null);

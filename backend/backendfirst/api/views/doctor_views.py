@@ -67,11 +67,15 @@ def doctor_dashboard_stats(request):
         read_at__isnull=True,
     ).exclude(sender_user=doctor).count()
 
+    # High risk count
+    high_risk_count = predictions.filter(probability__gte=75).count()
+
     return Response({
-        "patient_count": patient_count,
+        "total_patients": patient_count,
         "total_predictions": total_predictions,
         "pending_reviews": pending_reviews,
         "today_appointments": today_appointments,
+        "high_risk_count": high_risk_count,
         "unread_notifications": unread_notifications,
         "unread_messages": unread_messages,
     })
@@ -120,6 +124,57 @@ def pending_predictions(request):
             "age": pred.age,
             "review_status": pred.review_status,
             "created_at": pred.created_at.isoformat(),
+            "patient_name": f"{patient.first_name} {patient.last_name}".strip() or patient.username,
+        })
+
+    return Response({"count": len(data), "predictions": data})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsApprovedDoctor])
+def all_patient_predictions(request):
+    """
+    GET /api/doctor/predictions/?risk_level=...&review_status=...
+    Returns all predictions from assigned patients with optional filtering.
+    """
+    doctor = request.user
+    risk_level = request.query_params.get("risk_level")
+    review_status = request.query_params.get("review_status")
+
+    patient_ids = DoctorPatientAssignment.objects.filter(
+        doctor_user=doctor,
+        status="active",
+    ).values_list("patient_user_id", flat=True)
+
+    predictions = Prediction.objects.filter(patient_user_id__in=patient_ids).select_related("patient_user")
+
+    if risk_level:
+        predictions = predictions.filter(risk_level__iexact=risk_level)
+    if review_status:
+        predictions = predictions.filter(review_status=review_status)
+
+    predictions = predictions.order_by("-created_at")
+
+    data = []
+    for pred in predictions:
+        patient = pred.patient_user
+        profile = getattr(patient, "profile", None)
+        data.append({
+            "id": pred.id,
+            "patient_name": f"{patient.first_name} {patient.last_name}".strip() or patient.username,
+            "age": pred.age,
+            "glucose": pred.glucose,
+            "bmi": pred.bmi,
+            "blood_pressure": pred.blood_pressure,
+            "insulin": pred.insulin,
+            "skin_thickness": pred.skin_thickness,
+            "diabetes_pedigree_function": pred.diabetes_pedigree_function,
+            "pregnancies": pred.pregnancies,
+            "probability": pred.probability,
+            "risk_level": pred.risk_level,
+            "review_status": pred.review_status,
+            "created_at": pred.created_at.isoformat(),
+            "message": pred.message,
         })
 
     return Response({"count": len(data), "predictions": data})
@@ -327,6 +382,7 @@ def today_appointments(request):
             "type": appt.appointment_type,
             "prediction_id": appt.prediction_id,
             "notes": appt.notes,
+            "patient_name": f"{patient.first_name} {patient.last_name}".strip() or patient.username,
         })
 
     return Response({"count": len(data), "appointments": data})
@@ -454,9 +510,46 @@ def recent_activity(request):
             "created_at": appt.created_at.isoformat(),
         })
 
+    # Recent messages from patients
+    recent_msgs = (
+        DoctorPatientChatMessage.objects
+        .filter(thread__assignment__doctor_user=doctor)
+        .exclude(sender_user=doctor)
+        .select_related("sender_user")
+        .order_by("-created_at")[:5]
+    )
+    for msg in recent_msgs:
+        patient_name = f"{msg.sender_user.first_name} {msg.sender_user.last_name}".strip()
+        activities.append({
+            "type": "message",
+            "icon": "message-square",
+            "title": "رسالة جديدة",
+            "description": f"رسالة من {patient_name or msg.sender_user.email}",
+            "related_id": msg.thread_id,
+            "created_at": msg.created_at.isoformat(),
+        })
+
+    # Recent medication recommendations
+    recent_meds = (
+        MedicationRecommendation.objects
+        .filter(review__doctor_user=doctor)
+        .select_related("medication", "review__prediction__patient_user")
+        .order_by("-review__created_at")[:5]
+    )
+    for med_rec in recent_meds:
+        patient_name = f"{med_rec.review.prediction.patient_user.first_name} {med_rec.review.prediction.patient_user.last_name}".strip()
+        activities.append({
+            "type": "review",
+            "icon": "pill",
+            "title": "توصية دواء",
+            "description": f"تم وصف {med_rec.medication.name} للمريض {patient_name}",
+            "related_id": med_rec.review.prediction_id,
+            "created_at": med_rec.review.created_at.isoformat(),
+        })
+
     # Sort all activities by date
     activities.sort(key=lambda x: x["created_at"], reverse=True)
-    return Response({"count": len(activities[:10]), "activities": activities[:10]})
+    return Response({"count": len(activities[:15]), "activities": activities[:15]})
 
 
 # ═══════════════════════════════════════════════════════════════

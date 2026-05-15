@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { useApiCall } from '@/hooks/useApiCall';
-import { API_ENDPOINTS } from '@/lib/api';
+import { dashboardApi } from '@/api/dashboard';
 import { toast } from 'sonner';
+import type { DashboardStats, Prediction, Appointment } from '@/types/api';
 
 // Components
 import StatsCards from '@/components/doctor/StatsCards';
@@ -16,13 +17,13 @@ import RecentActivity from '@/components/doctor/RecentActivity';
 export default function DoctorDashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const apiCall = useApiCall();
+  const navigate = useNavigate();
 
-  const [stats, setStats] = useState(null);
-  const [predictions, setPredictions] = useState([]);
-  const [riskData, setRiskData] = useState(null);
-  const [appointments, setAppointments] = useState([]);
-  const [activities, setActivities] = useState([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [riskData, setRiskData] = useState<any>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   
   const [loading, setLoading] = useState({
     stats: true,
@@ -37,7 +38,7 @@ export default function DoctorDashboard() {
     const fetchDashboardData = async () => {
       // 1. Stats
       try {
-        const statsRes = await apiCall(API_ENDPOINTS.DOCTOR_DASHBOARD);
+        const statsRes = await dashboardApi.getStats();
         setStats(statsRes);
       } catch (error) {
         console.error("Failed to load stats", error);
@@ -47,8 +48,8 @@ export default function DoctorDashboard() {
 
       // 2. Pending Predictions
       try {
-        const predsRes = await apiCall(API_ENDPOINTS.DOCTOR_PENDING_PREDICTIONS);
-        setPredictions(predsRes.predictions || []);
+        const predsRes = await dashboardApi.getPendingPredictions();
+        setPredictions(predsRes);
       } catch (error) {
         console.error("Failed to load predictions", error);
       } finally {
@@ -57,7 +58,7 @@ export default function DoctorDashboard() {
 
       // 3. Risk Distribution
       try {
-        const riskRes = await apiCall(API_ENDPOINTS.DOCTOR_RISK_DISTRIBUTION);
+        const riskRes = await dashboardApi.getRiskDistribution();
         setRiskData(riskRes);
       } catch (error) {
         console.error("Failed to load risk data", error);
@@ -67,8 +68,8 @@ export default function DoctorDashboard() {
 
       // 4. Appointments Today
       try {
-        const apptsRes = await apiCall(API_ENDPOINTS.DOCTOR_APPOINTMENTS_TODAY);
-        setAppointments(apptsRes.appointments || []);
+        const apptsRes = await dashboardApi.getTodayAppointments();
+        setAppointments(apptsRes);
       } catch (error) {
         console.error("Failed to load appointments", error);
       } finally {
@@ -77,8 +78,8 @@ export default function DoctorDashboard() {
 
       // 5. Recent Activity
       try {
-        const actRes = await apiCall(API_ENDPOINTS.DOCTOR_ACTIVITY);
-        setActivities(actRes.activities || []);
+        const actRes = await dashboardApi.getRecentActivity();
+        setActivities(actRes);
       } catch (error) {
         console.error("Failed to load activities", error);
       } finally {
@@ -87,23 +88,34 @@ export default function DoctorDashboard() {
     };
 
     fetchDashboardData();
-  }, [apiCall]);
+  }, []);
 
   const handleReviewPrediction = (id: number) => {
-    toast.info("Opening review modal for prediction #" + id);
-    // TODO: Implement actual review modal/flow
+    // Navigate to reports page with the specific prediction context
+    navigate('/doctor-dashboard/reports', { state: { openReportId: id } });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Welcome Message */}
-      <div>
-        <h2 className="text-2xl font-bold">
-          {t('doctorDashboard.welcome')}, {user?.first_name || user?.username}
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t('doctorDashboard.subtitle')}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {t('doctorDashboard.welcome')}, {user?.first_name || user?.username}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('doctorDashboard.subtitle')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100 flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            {t('doctorDashboard.status.operational')}
+          </div>
+        </div>
       </div>
       
       {/* Stats Row */}

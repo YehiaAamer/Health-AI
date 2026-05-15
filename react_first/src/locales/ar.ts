@@ -4,6 +4,9 @@ const ar = {
   doctorDashboard: {
     welcome: "مرحباً",
     subtitle: "نظرة عامة على مرضاك وتحليلاتهم",
+    status: {
+      operational: "الأنظمة تعمل بشكل طبيعي",
+    },
     searchPlaceholder: "ابحث عن مريض...",
     sidebar: {
       title: "بوابة الطبيب",
@@ -38,7 +41,21 @@ const ar = {
           dosage: "الجرعة",
           frequency: "التكرار",
           mealTiming: "توقيت الوجبة",
-        }
+        },
+        loading: "جاري تحميل المحادثات...",
+        noConversations: "لم يتم العثور على محادثات",
+        id: "رقم",
+        activeConsultation: "استشارة نشطة",
+        videoCall: "مكالمة فيديو",
+        viewIndicators: "عرض المؤشرات",
+        startConversation: "ابدأ محادثة مع {{name}}",
+        typeMessage: "اكتب رسالة طبية...",
+        send: "إرسال",
+        selectThread: "اختر محادثة مريض",
+        fullRecord: "السجل الكامل",
+        recentAssessments: "التقييمات الأخيرة",
+        openRecord: "فتح السجل الطبي",
+        loadingContext: "جاري تحميل سياق المريض..."
       },
       settings: "الإعدادات",
       help: "المساعدة",
@@ -132,6 +149,11 @@ const ar = {
       },
       empty: "لم يتم العثور على تقارير تطابق فلاترك.",
       searchPlaceholder: "ابحث باسم المريض أو رقمه...",
+      monthlySummary: "الملخص الشهري",
+      riskAnalysis: "تحليل المخاطر",
+      patientDemographics: "البيانات الديموغرافية للمرضى",
+      viewAll: "عرض جميع التقارير",
+      generateNew: "إنشاء تقرير جديد",
     },
     activity: {
       title: "النشاط الأخير",
@@ -152,6 +174,40 @@ const ar = {
       noPatientsFound: "لم يتم العثور على مرضى يطابقون بحثك.",
       searchPlaceholder: "ابحث بالاسم، الرقم أو البريد...",
     },
+    noPatientsFound: "لم يتم العثور على مرضى",
+    settings: {
+      profileTitle: "إعدادات الملف الشخصي",
+      profileDesc: "إدارة ملفك الشخصي المهني ومعلوماتك العامة",
+      fullName: "الاسم الكامل",
+      email: "البريد الإلكتروني",
+      bio: "السيرة الذاتية المهنية",
+      phone: "رقم الهاتف",
+      saveChanges: "حفظ التغييرات",
+      notificationTitle: "تفضيلات التنبيهات",
+      notificationDesc: "اختر كيف تريد أن يتم إخطارك بنشاط المرضى",
+      emailNotifications: "تنبيهات البريد الإلكتروني",
+      smsNotifications: "تنبيهات SMS",
+      pushNotifications: "التنبيهات الفورية",
+      accountTitle: "معلومات الحساب",
+      securityTitle: "إعدادات الأمان",
+      passwordChange: "تغيير كلمة المرور",
+      themeTitle: "المظهر",
+      languageTitle: "إعدادات اللغة",
+      twoFactor: "المصادقة الثنائية",
+      sessions: "الجلسات النشطة"
+    },
+    help: {
+      faqs: "الأسئلة الشائعة",
+      faqsDesc: "إجابات سريعة على الأسئلة الشائعة حول المنصة",
+      guides: "أدلة النظام",
+      guidesDesc: "توثيق مفصل حول كيفية استخدام لوحة التحكم وميزات الذكاء الاصطناعي",
+      contact: "الاتصال بالدعم",
+      aiExplanation: "شرح توقعات الذكاء الاصطناعي",
+      aiExplanationDesc: "تعرف على كيفية حساب نماذج الذكاء الاصطناعي لمستويات مخاطر السكري",
+      emergencySupport: "دعم الطوارئ",
+      usageTips: "نصائح استخدام لوحة التحكم",
+      systemStatus: "حالة النظام"
+    }
   },
 
   dashboard: {

@@ -11,6 +11,7 @@ from .views.doctor_views import (
     recent_activity,
     doctor_profile,
     doctor_notifications,
+    all_patient_predictions,
 )
 
 urlpatterns = [
@@ -20,6 +21,7 @@ urlpatterns = [
     path('notifications/', doctor_notifications, name='doctor_notifications'),
 
     # Predictions
+    path('predictions/', all_patient_predictions, name='all_patient_predictions'),
     path('predictions/pending/', pending_predictions, name='pending_predictions'),
     path('predictions/<int:prediction_id>/review/', review_prediction, name='review_prediction'),
 

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useApiCall } from "@/hooks/useApiCall";
-import { API_ENDPOINTS } from "@/lib/api";
+import { messagesApi } from "@/api/messages";
+import { patientsApi } from "@/api/patients";
+import type { ChatThread, ChatMessage, User, Prediction } from "@/types/api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   MessageSquare,
@@ -21,7 +22,6 @@ import {
   AlertTriangle,
   CheckCheck,
   Activity,
-  User,
   Calendar,
   Pill,
   Sparkles,
@@ -30,180 +30,124 @@ import {
   Bot,
   ChevronDown,
   TrendingUp,
-  Clock,
-  MoreVertical
+  MoreVertical,
+  User as UserIcon
 } from "lucide-react";
 import LoadingDots from "@/components/shared/LoadingDots";
-
-interface Message {
-  id: string | number;
-  sender: 'doctor' | 'patient' | 'ai';
-  content: string;
-  time: string;
-  status: 'sent' | 'delivered' | 'seen';
-}
-
-interface Conversation {
-  id: string | number;
-  patient_name: string;
-  patient_id: string;
-  last_message: string;
-  time: string;
-  unread_count: number;
-  online: boolean;
-  risk_level: 'High' | 'Medium' | 'Low';
-  avatar?: string;
-  age?: string;
-  gender?: string;
-}
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function MessagesPage() {
-  const { i18n } = useTranslation();
-  const apiCall = useApiCall();
+  const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [loading, setLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
+  const [selectedConv, setSelectedConv] = useState<ChatThread | null>(null);
+  const [patientProfile, setPatientProfile] = useState<(User & { predictions: Prediction[] }) | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [activeFilter, setActiveFilter] = useState('all');
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<ChatThread[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  // Mock Data
-  const mockConversations: Conversation[] = [
-    {
-      id: 1,
-      patient_name: "Ahmed Ali",
-      patient_id: "#P1001",
-      last_message: "Doctor, I uploaded new glucose readings. Please check and advise.",
-      time: "2m ago",
-      unread_count: 3,
-      online: true,
-      risk_level: 'High',
-      age: "35",
-      gender: "Male"
-    },
-    {
-      id: 2,
-      patient_name: "Fatma Hassan",
-      patient_id: "#P1002",
-      last_message: "Thank you doctor, I will follow your advice.",
-      time: "15m ago",
-      unread_count: 1,
-      online: false,
-      risk_level: 'Medium',
-      age: "42",
-      gender: "Female"
-    },
-    {
-      id: 3,
-      patient_name: "Mohamed Tarek",
-      patient_id: "#P1003",
-      last_message: "When should I take the next test?",
-      time: "1h ago",
-      unread_count: 0,
-      online: true,
-      risk_level: 'Low',
-      age: "29",
-      gender: "Male"
-    },
-    {
-      id: 4,
-      patient_name: "Nour Ahmed",
-      patient_id: "#P1004",
-      last_message: "I have been feeling dizzy since yesterday.",
-      time: "2h ago",
-      unread_count: 2,
-      online: false,
-      risk_level: 'High',
-      age: "51",
-      gender: "Female"
-    },
-    {
-      id: 5,
-      patient_name: "Omar Samir",
-      patient_id: "#P1005",
-      last_message: "Okay, I will schedule the appointment.",
-      time: "Yesterday",
-      unread_count: 0,
-      online: false,
-      risk_level: 'Medium',
-      age: "38",
-      gender: "Male"
+  // Fetch conversations
+  const fetchConversations = async () => {
+    try {
+      const data = await messagesApi.getThreads();
+      setConversations(data);
+      if (data.length > 0 && !selectedConv) {
+        setSelectedConv(data[0]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch conversations", error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const mockMessages: Message[] = [
-    {
-      id: 1,
-      sender: 'patient',
-      content: "Doctor, I uploaded new glucose readings. Please check and advise.",
-      time: "10:02 AM",
-      status: 'seen'
-    },
-    {
-      id: 2,
-      sender: 'doctor',
-      content: "Thanks Ahmed, I will review your readings and get back to you shortly.",
-      time: "10:03 AM",
-      status: 'seen'
-    },
-    {
-      id: 3,
-      sender: 'ai',
-      content: "I've analyzed the latest data. Glucose levels are higher than normal. Consider medication adjustment and lifestyle modifications.",
-      time: "10:04 AM",
-      status: 'seen'
-    },
-    {
-      id: 4,
-      sender: 'patient',
-      content: "I have been feeling more tired than usual, is that related?",
-      time: "10:05 AM",
-      status: 'seen'
-    },
-    {
-      id: 5,
-      sender: 'doctor',
-      content: "Yes, it could be related to higher glucose levels. Please make sure to follow your diet and medication plan.",
-      time: "10:06 AM",
-      status: 'seen'
+  // Fetch messages for selected conversation
+  const fetchMessages = async (threadId: number) => {
+    try {
+      setMessagesLoading(true);
+      const data = await messagesApi.getMessages(threadId);
+      setMessages(data);
+    } catch (error) {
+      console.error("Failed to fetch messages", error);
+      toast.error(isArabic ? "فشل تحميل الرسائل" : "Failed to load messages");
+    } finally {
+      setMessagesLoading(false);
     }
-  ];
+  };
+
+  // Fetch patient medical summary
+  const fetchPatientProfile = async (patientId: string) => {
+    try {
+      // Use numeric ID from the string if it contains one (e.g., "8" from "8" or "8" from "PID-8")
+      const numericId = parseInt(patientId?.replace(/^\D+/g, '') || '0');
+      if (isNaN(numericId)) {
+        console.warn("Invalid patient ID format:", patientId);
+        return;
+      }
+      const data = await patientsApi.getPatientProfile(numericId);
+      setPatientProfile(data);
+    } catch (error) {
+      console.error("Failed to fetch patient profile", error);
+    }
+  };
 
   useEffect(() => {
-    setTimeout(() => {
-      setConversations(mockConversations);
-      setSelectedConv(mockConversations[0]);
-      setMessages(mockMessages);
-      setLoading(false);
-    }, 800);
+    fetchConversations();
+    // Poll for new conversations every 30 seconds
+    const interval = setInterval(fetchConversations, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    if (selectedConv) {
+      fetchMessages(selectedConv.id);
+      fetchPatientProfile(selectedConv.patient_id);
+      
+      // Poll for new messages every 10 seconds
+      const interval = setInterval(() => fetchMessages(selectedConv.id), 10000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedConv]);
+
+  useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
-    const msg: Message = {
-      id: Date.now(),
-      sender: 'doctor',
-      content: newMessage,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'sent'
-    };
-    setMessages([...messages, msg]);
-    setNewMessage("");
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConv) return;
+    
+    try {
+      const sentMsg = await messagesApi.sendMessage(selectedConv.id, newMessage);
+      setMessages(prev => [...prev, sentMsg]);
+      setNewMessage("");
+      // Also update the local conversation preview
+      setConversations(prev => prev.map(c => 
+        c.id === selectedConv.id ? { ...c, last_message: newMessage, time: 'Just now' } : c
+      ));
+    } catch (error) {
+      console.error("Failed to send message", error);
+      toast.error(isArabic ? "فشل إرسال الرسالة" : "Failed to send message");
+    }
   };
 
+  const filteredConversations = conversations.filter(conv => 
+    conv.patient_name?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const getRiskBadgeStyles = (level: string) => {
-    switch (level.toLowerCase()) {
+    switch (level?.toLowerCase()) {
       case 'high': return 'bg-red-50 text-red-600 border-red-100';
       case 'medium': return 'bg-orange-50 text-orange-600 border-orange-100';
       case 'low': return 'bg-green-50 text-green-600 border-green-100';
@@ -211,416 +155,343 @@ export default function MessagesPage() {
     }
   };
 
+  const latestPrediction = patientProfile?.predictions?.[0];
+
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex flex-col items-center justify-center bg-slate-50/50">
         <LoadingDots />
+        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+          {t('doctorDashboard.sidebar.messages.loading')}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-100px)] flex gap-4 overflow-hidden animate-in fade-in duration-700 bg-slate-50/30 p-2">
+    <div className="h-[calc(100vh-100px)] flex gap-4 overflow-hidden animate-in fade-in duration-700 bg-slate-50/30 p-2" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* COLUMN 1: CONVERSATIONS SIDEBAR */}
-      <Card className="w-[300px] flex flex-col border border-slate-200/60 shadow-sm rounded-3xl bg-white overflow-hidden shrink-0">
-        <div className="p-5 border-b border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Messages</h2>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors">
+      <Card className="w-[320px] flex flex-col border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] bg-white overflow-hidden shrink-0">
+        <div className="p-6 border-b border-slate-50">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+              {t('doctorDashboard.sidebar.messages.title')}
+            </h2>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </div>
           
-          <div className="relative group mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+          <div className="relative group mb-5">
+            <Search className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors", isArabic ? "right-4" : "left-4")} />
             <Input
-              placeholder="Search conversations..."
-              className="pl-9 h-9 bg-slate-50/50 border-slate-200/60 rounded-xl text-xs focus-visible:ring-1 focus-visible:ring-blue-100"
+              placeholder={t('doctorDashboard.sidebar.messages.searchPlaceholder')}
+              className={cn("h-11 bg-slate-50/50 border-transparent rounded-[1.25rem] text-[13px] font-bold focus:bg-white focus:ring-4 focus:ring-blue-600/10 transition-all", isArabic ? "pr-11 pl-4" : "pl-11 pr-4")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
             {[
-              { id: 'all', label: 'All' },
-              { id: 'unread', label: 'Unread', count: 5 },
-              { id: 'highRisk', label: 'High Risk' },
-              { id: 'followUp', label: 'Follow-up' }
+              { id: 'all', label: t('doctorDashboard.sidebar.messages.filters.all') },
+              { id: 'unread', label: t('doctorDashboard.sidebar.messages.filters.unread') },
+              { id: 'highRisk', label: t('doctorDashboard.sidebar.messages.filters.highRisk') }
             ].map((f) => (
               <button 
                 key={f.id} 
                 onClick={() => setActiveFilter(f.id)}
-                className={`rounded-full px-3.5 py-1.5 whitespace-nowrap text-[11px] font-bold transition-all border ${activeFilter === f.id ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/10' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                className={`rounded-xl px-4 py-2 whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
               >
                 {f.label}
-                {f.count && <span className={`ml-1.5 ${activeFilter === f.id ? 'text-white/80' : 'text-blue-600'}`}>{f.count}</span>}
               </button>
             ))}
           </div>
         </div>
 
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-0.5">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => setSelectedConv(conv)}
-                className={`p-3.5 rounded-2xl cursor-pointer transition-all flex items-center gap-3 group relative border ${selectedConv?.id === conv.id ? 'bg-blue-50/40 border-blue-100/50 shadow-sm' : 'hover:bg-slate-50/80 border-transparent'}`}
-              >
-                <div className="relative shrink-0">
-                  <Avatar className="h-11 w-11 border-2 border-white shadow-sm">
-                    <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs">
-                      {conv.patient_name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  {conv.online && <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 rounded-full border-2 border-white" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-bold text-slate-900 truncate text-[12.5px]">{conv.patient_name}</h4>
-                    <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap">{conv.time}</span>
-                  </div>
-                  <p className="text-[11px] font-medium text-slate-500 truncate group-hover:text-slate-600 leading-tight mb-2">{conv.last_message}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge className={`px-1.5 py-0 h-3.5 text-[7.5px] font-black uppercase border tracking-wider rounded-md shadow-none ${getRiskBadgeStyles(conv.risk_level)}`}>
-                      {conv.risk_level} RISK
-                    </Badge>
-                  </div>
-                </div>
-                {conv.unread_count > 0 && selectedConv?.id !== conv.id && (
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-600/20">
-                    <span className="text-[8px] font-black text-white">{conv.unread_count}</span>
-                  </div>
-                )}
+          <div className="p-3 space-y-1">
+            {filteredConversations.length === 0 ? (
+              <div className="py-10 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">
+                {t('doctorDashboard.sidebar.messages.noConversations')}
               </div>
-            ))}
+            ) : (
+              filteredConversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => setSelectedConv(conv)}
+                  className={cn(
+                    "p-4 rounded-[2rem] cursor-pointer transition-all flex items-center gap-4 group relative border-2",
+                    selectedConv?.id === conv.id ? "bg-blue-50/50 border-blue-600/10 shadow-sm" : "hover:bg-slate-50 border-transparent"
+                  )}
+                >
+                  <div className="relative shrink-0">
+                    <Avatar className="h-12 w-12 border-2 border-white shadow-sm ring-4 ring-slate-50">
+                      <AvatarFallback className="bg-blue-100 text-blue-600 font-black text-xs">
+                        {conv.patient_name?.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase() || 'P'}
+                      </AvatarFallback>
+                    </Avatar>
+                    {conv.online && <div className={cn("absolute bottom-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white", isArabic ? "left-0" : "right-0")} />}
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className={cn("flex items-center justify-between mb-0.5", isArabic && "flex-row-reverse")}>
+                      <h4 className={cn("font-black text-slate-900 truncate text-[13.5px] tracking-tight", conv.unread_count > 0 && "text-blue-600")}>{conv.patient_name}</h4>
+                      <span className="text-[9px] font-black text-slate-400 whitespace-nowrap uppercase tracking-tighter">{conv.time}</span>
+                    </div>
+                    <p className={cn("text-[11.5px] font-medium text-slate-500 truncate leading-tight mb-2", conv.unread_count > 0 && "text-slate-900 font-bold", isArabic && "text-right")}>{conv.last_message}</p>
+                    <div className={cn("flex items-center gap-2", isArabic && "flex-row-reverse")}>
+                      <Badge className={cn("px-2 py-0.5 h-4 text-[7px] font-black uppercase border tracking-widest rounded-lg shadow-none", getRiskBadgeStyles(conv.risk_level))}>
+                        {isArabic ? (conv.risk_level === 'High' ? 'عالية الخطورة' : conv.risk_level === 'Medium' ? 'متوسطة الخطورة' : 'منخفضة الخطورة') : `${conv.risk_level} Risk`}
+                      </Badge>
+                    </div>
+                  </div>
+                  {conv.unread_count > 0 && selectedConv?.id !== conv.id && (
+                    <div className={cn("absolute top-1/2 -translate-y-1/2 h-5 w-5 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30", isArabic ? "left-4" : "right-4")}>
+                      <span className="text-[9px] font-black text-white">{conv.unread_count}</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </ScrollArea>
-
-        <div className="p-4 bg-slate-50/30 mt-auto border-t border-slate-100">
-          <Button variant="ghost" className="w-full text-slate-500 font-bold text-[11px] hover:bg-white hover:text-blue-600 hover:shadow-sm py-4 rounded-xl transition-all">
-            Load more conversations
-          </Button>
-        </div>
       </Card>
 
       {/* COLUMN 2: CENTER CHAT AREA */}
-      <Card className="flex-1 flex flex-col border border-slate-200/60 shadow-sm rounded-3xl bg-white overflow-hidden relative">
+      <Card className="flex-1 flex flex-col border-none shadow-2xl shadow-slate-200/40 rounded-[3rem] bg-white overflow-hidden relative">
         {selectedConv ? (
           <>
             {/* Chat Header */}
-            <div className="h-[72px] px-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-              <div className="flex items-center gap-3.5">
+            <div className={cn("h-[80px] px-8 border-b border-slate-50 flex items-center justify-between bg-white shrink-0", isArabic && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-4", isArabic && "flex-row-reverse")}>
                 <div className="relative">
-                  <Avatar className="h-11 w-11 border border-slate-100 shadow-sm">
-                    <AvatarFallback className="bg-slate-50 text-slate-900 font-bold text-sm">
-                      {selectedConv.patient_name.split(' ').map(n => n[0]).join('')}
+                  <Avatar className="h-12 w-12 border-2 border-slate-50 shadow-sm">
+                    <AvatarFallback className="bg-slate-100 text-slate-900 font-black text-sm">
+                      {selectedConv.patient_name?.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase() || 'P'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
+                  <div className={cn("absolute -bottom-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white", isArabic ? "left-0.5" : "right-0.5")} />
                 </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="text-[15px] font-bold text-slate-900 tracking-tight">{selectedConv.patient_name}</h3>
-                    <Badge className="bg-red-50 text-red-600 border-red-100 px-1.5 py-0 h-4 text-[8px] font-black uppercase tracking-wider rounded-md">HIGH RISK</Badge>
+                <div className={cn("flex flex-col", isArabic ? "items-end text-right" : "items-start")}>
+                  <div className={cn("flex items-center gap-3 mb-0.5", isArabic && "flex-row-reverse")}>
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight">{selectedConv.patient_name}</h3>
+                    <Badge className={cn("px-2.5 py-0.5 h-4.5 text-[8px] font-black uppercase tracking-widest rounded-lg", getRiskBadgeStyles(selectedConv.risk_level))}>
+                      {isArabic ? (selectedConv.risk_level === 'High' ? 'عالية الخطورة' : selectedConv.risk_level === 'Medium' ? 'متوسطة الخطورة' : 'منخفضة الخطورة') : `${selectedConv.risk_level} RISK`}
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    <span>{selectedConv.age} years, {selectedConv.gender}</span>
+                  <div className={cn("flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest", isArabic && "flex-row-reverse")}>
+                    <span>{t('doctorDashboard.sidebar.messages.id')}: #{selectedConv.patient_id}</span>
                     <span className="h-1 w-1 bg-slate-200 rounded-full" />
-                    <span>ID: {selectedConv.patient_id}</span>
-                    <span className="h-1 w-1 bg-slate-200 rounded-full" />
-                    <span className="text-blue-600 font-black">AI Prediction: 82%</span>
+                    <span className="text-blue-600">{t('doctorDashboard.sidebar.messages.activeConsultation')}</span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Button variant="outline" className="rounded-xl h-9 px-4 border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-[11px] gap-2 transition-all">
-                  <FileText className="h-3.5 w-3.5" />
-                  View Report
+              <div className={cn("flex items-center gap-3", isArabic && "flex-row-reverse")}>
+                <Button variant="outline" className="rounded-2xl h-11 px-5 border-slate-100 text-slate-700 hover:bg-slate-50 font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm">
+                  <Video className="h-4 w-4 text-blue-600" />
+                  {t('doctorDashboard.sidebar.messages.videoCall')}
                 </Button>
-                <Button className="rounded-xl h-9 px-4 bg-blue-600 text-white hover:bg-blue-700 font-bold text-[11px] gap-2 shadow-lg shadow-blue-600/15 transition-all">
-                  <Video className="h-3.5 w-3.5" />
-                  Start Consultation
-                </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:bg-slate-50 transition-colors">
-                  <MoreHorizontal className="h-4.5 w-4.5" />
+                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl text-slate-300 hover:bg-slate-50 transition-all">
+                  <MoreHorizontal className="h-5 w-5" />
                 </Button>
               </div>
             </div>
 
-            {/* Emergency Alert Banner */}
-            <div className="bg-red-50/60 h-10 px-6 flex items-center justify-between border-b border-red-100/30 animate-in slide-in-from-top-full duration-700 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
-                <p className="text-[10px] font-bold text-red-700 uppercase tracking-widest">
-                  Critical indicators detected in latest prediction
-                </p>
+            {/* Emergency Banner */}
+            {selectedConv.risk_level?.toLowerCase() === 'high' && (
+              <div className={cn("bg-red-600 h-10 px-8 flex items-center justify-between animate-in slide-in-from-top-full duration-700 shrink-0 shadow-lg shadow-red-600/10", isArabic && "flex-row-reverse")}>
+                <div className={cn("flex items-center gap-3", isArabic && "flex-row-reverse")}>
+                  <AlertTriangle className="h-4 w-4 text-white" />
+                  <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">
+                    {t('doctorDashboard.sidebar.messages.chat.emergencyAlert')}
+                  </p>
+                </div>
+                <button className="text-[9px] font-black text-white/80 hover:text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-lg">
+                  {t('doctorDashboard.sidebar.messages.viewIndicators')}
+                </button>
               </div>
-              <div className="flex items-center gap-4">
-                <button className="text-[9px] font-black text-red-600 hover:underline uppercase tracking-widest">View Details</button>
-                <X className="h-3.5 w-3.5 text-red-300 hover:text-red-500 cursor-pointer transition-colors" />
-              </div>
-            </div>
+            )}
 
             {/* Messages Scroll Area */}
-            <ScrollArea className="flex-1 bg-slate-50/20 px-6" ref={scrollRef}>
-              <div className="py-6 space-y-5 max-w-3xl mx-auto w-full">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex gap-3.5 ${msg.sender === 'doctor' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    {msg.sender !== 'doctor' && (
-                      <Avatar className={`h-9 w-9 shrink-0 border border-slate-100 shadow-sm ${msg.sender === 'ai' ? 'bg-purple-600' : ''}`}>
-                        {msg.sender === 'ai' ? (
-                          <div className="h-full w-full flex items-center justify-center text-white">
-                            <Bot className="h-4.5 w-4.5" />
-                          </div>
-                        ) : (
-                          <AvatarFallback className="bg-slate-200 text-[10px] font-bold text-slate-600">
-                            AH
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                    )}
-                    
-                    <div className={`flex flex-col ${msg.sender === 'doctor' ? 'items-end' : 'items-start'} max-w-[80%]`}>
-                      <div className={`p-3.5 px-4.5 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] text-[12.5px] font-medium leading-relaxed ${
-                        msg.sender === 'doctor' ? 'bg-slate-900 text-white rounded-tr-none' : 
-                        msg.sender === 'ai' ? 'bg-purple-50/80 text-purple-900 border border-purple-100/50 rounded-tl-none' : 
-                        'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
-                      }`}>
-                        {msg.sender === 'ai' && (
-                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-purple-200/40">
-                            <Sparkles className="h-3 w-3 text-purple-600" />
-                            <span className="text-[9px] font-black uppercase tracking-widest">AI Insights</span>
-                          </div>
-                        )}
-                        {msg.content}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1.5 px-1 opacity-60">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{msg.time}</span>
-                        {msg.sender === 'doctor' && (
-                          <CheckCheck className="h-3 w-3 text-blue-500" />
-                        )}
+            <ScrollArea className="flex-1 bg-slate-50/20 px-8" ref={scrollRef}>
+              <div className="py-8 space-y-6 max-w-4xl mx-auto w-full">
+                {messagesLoading && messages.length === 0 ? (
+                  <div className="flex justify-center py-10"><LoadingDots /></div>
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-20 text-slate-300 font-black uppercase text-xs tracking-[0.2em]">
+                    {t('doctorDashboard.sidebar.messages.startConversation', { name: selectedConv.patient_name })}
+                  </div>
+                ) : (
+                  messages.map((msg) => (
+                    <div key={msg.id} className={cn("flex gap-4", msg.sender_user !== parseInt(selectedConv.patient_id?.replace(/^\D+/g, '') || '0') ? "flex-row-reverse" : "flex-row")}>
+                      <div className={cn("flex flex-col max-w-[75%]", msg.sender_user !== parseInt(selectedConv.patient_id?.replace(/^\D+/g, '') || '0') ? "items-end" : "items-start")}>
+                        <div className={cn(
+                          "p-4 px-6 rounded-[2.5rem] text-[13px] font-bold leading-relaxed shadow-sm",
+                          msg.sender_user !== parseInt(selectedConv.patient_id?.replace(/^\D+/g, '') || '0')
+                            ? "bg-slate-900 text-white rounded-tr-none shadow-xl shadow-slate-900/10" 
+                            : "bg-white text-slate-700 border border-slate-100 rounded-tl-none"
+                        )}>
+                          {msg.content}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 px-2">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                            {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                          </span>
+                          {msg.sender_user !== parseInt(selectedConv.patient_id?.replace(/^\D+/g, '') || '0') && <CheckCheck className="h-3.5 w-3.5 text-blue-500" />}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                
-                <div className="flex items-center gap-2.5 px-1 py-2">
-                  <div className="flex gap-1">
-                    <span className="w-1 h-1 bg-blue-500/40 rounded-full animate-bounce" />
-                    <span className="w-1 h-1 bg-blue-500/40 rounded-full animate-bounce [animation-delay:0.2s]" />
-                    <span className="w-1 h-1 bg-blue-500/40 rounded-full animate-bounce [animation-delay:0.4s]" />
-                  </div>
-                  <span className="text-[10px] font-bold text-blue-500/60 uppercase tracking-widest italic">
-                    Ahmed Ali is typing...
-                  </span>
-                </div>
+                  ))
+                )}
               </div>
             </ScrollArea>
 
-            {/* Chat Footer / Input Area */}
-            <div className="p-6 border-t border-slate-100 bg-white shrink-0">
-              <div className="flex items-center gap-3.5 bg-slate-50/50 p-2.5 pl-4 rounded-2xl border border-slate-200/60 group focus-within:ring-4 focus-within:ring-blue-100/20 focus-within:border-blue-300 transition-all mb-4">
-                <Button variant="ghost" size="icon" className="h-8.5 w-8.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                  <Paperclip className="h-4.5 w-4.5" />
-                </Button>
+            {/* Input Area */}
+            <div className="p-8 border-t border-slate-50 bg-white shrink-0">
+              <div className={cn("flex items-center gap-4 bg-slate-50 border-2 border-transparent p-2 rounded-[2.25rem] focus-within:bg-white focus-within:border-blue-600/20 focus-within:ring-8 focus-within:ring-blue-600/5 transition-all shadow-inner", isArabic ? "pr-6 pl-2 flex-row-reverse" : "pl-6 pr-2")}>
                 <input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Type your message here..."
-                  className="flex-1 bg-transparent border-none outline-none text-[12.5px] font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-medium"
+                  placeholder={t('doctorDashboard.sidebar.messages.typeMessage')}
+                  className={cn("flex-1 bg-transparent border-none outline-none text-[13.5px] font-black text-slate-800 placeholder:text-slate-400", isArabic && "text-right")}
                 />
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8.5 w-8.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    <Smile className="h-4.5 w-4.5" />
+                <div className={cn("flex items-center gap-1", isArabic ? "pl-1" : "pr-1")}>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-blue-600 hover:bg-white rounded-2xl transition-all">
+                    <Paperclip className="h-5 w-5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8.5 w-8.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    <Mic className="h-4.5 w-4.5" />
+                  <Button 
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim()}
+                    className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl shadow-xl shadow-blue-600/20 font-black uppercase text-xs tracking-widest transition-all"
+                  >
+                    <Send className={cn("h-4 w-4", isArabic ? "ml-2" : "mr-2")} />
+                    {t('doctorDashboard.sidebar.messages.send')}
                   </Button>
                 </div>
-                <Button 
-                  onClick={handleSendMessage}
-                  className="h-10 px-5 bg-slate-900 hover:bg-black text-white rounded-xl shadow-lg shadow-slate-900/10 font-bold gap-2 transition-all"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  Send
-                </Button>
-              </div>
-
-              {/* AI Suggested Replies */}
-              <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-0.5">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full border border-purple-100/60 shrink-0">
-                  <Sparkles className="h-3 w-3" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Suggested</span>
-                </div>
-                {[
-                  "Schedule follow-up", 
-                  "Recommend new test", 
-                  "Approve medication",
-                  "Encourage lifestyle changes"
-                ].map((s, i) => (
-                  <button key={i} className="px-4 py-1.5 bg-white hover:bg-blue-600 hover:text-white text-slate-600 rounded-full border border-slate-200 text-[10px] font-bold whitespace-nowrap transition-all shadow-sm">
-                    {s}
-                  </button>
-                ))}
               </div>
             </div>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-200 p-20">
-            <div className="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-              <MessageSquare className="h-10 w-10 opacity-20" />
+            <div className="h-32 w-32 bg-slate-50 rounded-[3rem] flex items-center justify-center mb-8 shadow-inner">
+              <MessageSquare className="h-12 w-12 opacity-10" />
             </div>
-            <p className="text-sm font-black text-slate-300 tracking-widest uppercase">Select a conversation to start chatting</p>
+            <p className="text-xs font-black text-slate-400 tracking-[0.3em] uppercase">
+              {t('doctorDashboard.sidebar.messages.selectThread')}
+            </p>
           </div>
         )}
       </Card>
 
       {/* COLUMN 3: PATIENT SUMMARY PANEL */}
-      <Card className="w-[340px] flex flex-col border border-slate-200/60 shadow-sm rounded-3xl bg-white overflow-hidden shrink-0">
-        <div className="h-[72px] px-6 border-b border-slate-100 flex items-center justify-between bg-white">
-          <h2 className="text-[14px] font-black text-slate-900 tracking-widest uppercase">Patient Summary</h2>
-          <div className="flex gap-1.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 rounded-lg"><MoreHorizontal className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 rounded-lg"><ChevronDown className="h-4 w-4" /></Button>
-          </div>
+      <Card className="w-[360px] flex flex-col border-none shadow-xl shadow-slate-200/50 rounded-[3rem] bg-white overflow-hidden shrink-0">
+        <div className={cn("h-[80px] px-8 border-b border-slate-50 flex items-center justify-between bg-white shrink-0", isArabic && "flex-row-reverse")}>
+          <h2 className="text-[11px] font-black text-slate-900 tracking-[0.2em] uppercase">
+            {t('doctorDashboard.sidebar.messages.summary.title')}
+          </h2>
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-300 rounded-xl"><MoreVertical className="h-4 w-4" /></Button>
         </div>
         
         <ScrollArea className="flex-1">
-          <div className="p-6 space-y-8 pb-10">
-            {/* 1. Risk Status */}
-            <div className="space-y-4">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Current Risk Status</p>
-              <div className="flex items-end justify-between gap-4 p-5 bg-slate-50/50 border border-slate-100 rounded-2xl">
-                <div>
-                  <div className="flex items-baseline gap-2 mb-1.5">
-                    <span className="text-4xl font-black text-slate-900 leading-none tracking-tighter">82%</span>
-                    <Badge className="bg-red-50 text-red-600 border-red-100 px-2 py-0.5 text-[8px] font-black uppercase rounded-md">High Risk</Badge>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-red-500">
-                    <TrendingUp className="h-3 w-3" />
-                    <span className="text-[9px] font-bold">Increasing risk (+4%)</span>
+          <div className="p-8 space-y-10 pb-12">
+            {patientProfile ? (
+              <>
+                {/* 1. Risk Status */}
+                <div className={cn("space-y-5", isArabic && "text-right")}>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">
+                    {t('doctorDashboard.sidebar.messages.summary.riskTrend')}
+                  </p>
+                  <div className="p-6 bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-slate-900/20 relative overflow-hidden group">
+                    <div className="relative z-10">
+                      <div className={cn("flex items-baseline gap-2 mb-2", isArabic && "flex-row-reverse")}>
+                        <span className="text-5xl font-black text-white tracking-tighter">{latestPrediction ? Math.round(latestPrediction.probability) : 0}%</span>
+                        <Badge className={cn("px-2 py-0.5 text-[8px] font-black uppercase rounded-lg border-none shadow-lg", latestPrediction?.risk_level?.toLowerCase() === 'high' ? "bg-red-500 text-white" : "bg-green-500 text-white")}>
+                          {isArabic ? (latestPrediction?.risk_level === 'High' ? 'خطورة عالية' : 'خطورة منخفضة') : `${latestPrediction?.risk_level || 'Low'} Risk`}
+                        </Badge>
+                      </div>
+                      <div className={cn("flex items-center gap-2 text-slate-400", isArabic && "flex-row-reverse")}>
+                        <TrendingUp className="h-4 w-4 text-blue-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">
+                          {isArabic ? `بناءً على ${patientProfile.predictions.length} تقييمات` : `Based on ${patientProfile.predictions.length} assessments`}
+                        </span>
+                      </div>
+                    </div>
+                    <Sparkles className="absolute -bottom-6 -right-6 h-24 w-24 text-white/5 group-hover:scale-110 transition-transform duration-700" />
                   </div>
                 </div>
-                <div className="flex-1 h-12 flex items-end gap-1 px-1">
-                  {[30, 45, 40, 55, 60, 50, 75, 82].map((h, i) => (
-                    <div 
-                      key={i} 
-                      className={`flex-1 rounded-t-sm transition-all duration-500 ${i === 7 ? 'bg-red-500' : 'bg-red-200/40'}`} 
-                      style={{ height: `${h}%` }} 
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
 
-            {/* 2. Latest Indicators Grid */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Latest Indicators</p>
-                <button className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-wider">View History</button>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "Glucose", value: "190", unit: "mg/dL", color: "red" },
-                  { label: "Blood Pressure", value: "140/90", unit: "mmHg", color: "orange" },
-                  { label: "BMI", value: "35.2", color: "red" },
-                  { label: "Insulin", value: "180", unit: "µU/mL", color: "red" },
-                  { label: "Skin", value: "32", unit: "mm", color: "orange" },
-                  { label: "Age", value: "35", color: "green" },
-                ].map((ind, i) => (
-                  <div key={i} className="p-3.5 bg-slate-50/50 rounded-2xl border border-slate-100/50 transition-all hover:border-slate-200">
-                    <p className="text-[8.5px] font-bold text-slate-400 uppercase leading-none mb-2">{ind.label}</p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-[12.5px] font-black text-slate-900 tracking-tight">
-                        {ind.value} <span className="text-[9px] font-medium text-slate-400 ml-0.5">{ind.unit}</span>
-                      </p>
-                      <div className={`h-1.5 w-1.5 rounded-full ${
-                        ind.color === 'red' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 
-                        ind.color === 'orange' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]'
-                      }`} />
-                    </div>
+                {/* 2. Vital Indicators */}
+                <div className="space-y-5">
+                  <div className={cn("flex items-center justify-between px-2", isArabic && "flex-row-reverse")}>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                      {t('doctorDashboard.sidebar.messages.summary.latestIndicators')}
+                    </p>
+                    <button className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-widest">
+                      {t('doctorDashboard.sidebar.messages.fullRecord')}
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 3. Last AI Prediction */}
-            <div className="space-y-4">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Recent Predictions</p>
-              <div className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-slate-200 transition-all">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8.5 w-8.5 bg-purple-50 rounded-xl flex items-center justify-center">
-                      <Sparkles className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 leading-tight">May 7, 02:15 PM</p>
-                      <p className="text-[9px] font-bold text-red-500 uppercase tracking-tighter mt-0.5">82% High Risk</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-300 hover:text-blue-600"><ArrowUpRight className="h-4 w-4" /></Button>
-                </div>
-              </div>
-            </div>
-
-            {/* 4. Current Medications */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Medications</p>
-                <button className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-wider">All (4)</button>
-              </div>
-              <div className="space-y-2.5">
-                {[
-                  { name: "Metformin 500mg", dosage: "2x daily • After meal" },
-                  { name: "Glimepiride 2mg", dosage: "1x daily • With meal" },
-                ].map((med, i) => (
-                  <div key={i} className="p-3.5 bg-white border border-slate-100 rounded-2xl flex items-center gap-3.5 shadow-sm hover:border-slate-200 transition-all cursor-pointer group">
-                    <div className="w-8.5 h-8.5 rounded-xl bg-blue-50/80 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors text-blue-600">
-                      <Pill className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11.5px] font-black text-slate-900 leading-tight">{med.name}</p>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1">{med.dosage}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 5. Last Review */}
-            <div className="space-y-4">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Last Doctor Review</p>
-              <div className="p-4 bg-slate-900 rounded-2xl shadow-lg shadow-slate-900/10">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 bg-green-500 rounded-full" />
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest">Approved</p>
-                  </div>
-                  <p className="text-[9px] font-bold text-white/50 uppercase">May 6</p>
-                </div>
-                <p className="text-[11px] font-medium text-white/80 leading-relaxed italic">"Continue current medication. Repeat test in 2 weeks."</p>
-              </div>
-            </div>
-
-            {/* 6. Upcoming Appointment */}
-            <div className="space-y-4">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Next Appointment</p>
-              <div className="p-4 bg-blue-50/50 border border-blue-100/60 rounded-2xl flex items-center justify-between transition-all hover:bg-blue-50">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-8.5 h-8.5 rounded-xl bg-white border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
-                    <Calendar className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-[11.5px] font-black text-slate-900 leading-tight">Follow-up Call</p>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">May 14 • 10:30 AM</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: t('dashboard.glucose'), value: latestPrediction?.glucose || "--", unit: "mg/dL", color: latestPrediction?.glucose && latestPrediction.glucose > 140 ? "red" : "green" },
+                      { label: t('dashboard.bmi'), value: latestPrediction?.bmi || "--", unit: "kg/m²", color: latestPrediction?.bmi && latestPrediction.bmi > 30 ? "red" : "green" },
+                      { label: t('dashboard.bloodPressure'), value: latestPrediction?.blood_pressure || "--", unit: "mmHg", color: "blue" },
+                      { label: t('dashboard.age'), value: latestPrediction?.age || "--", unit: isArabic ? "سنة" : "Years", color: "blue" },
+                    ].map((ind, i) => (
+                      <div key={i} className="p-4 bg-slate-50 border border-slate-50 rounded-[1.75rem] transition-all hover:bg-white hover:shadow-lg hover:border-blue-100 group">
+                        <p className={cn("text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 group-hover:text-blue-500 transition-colors", isArabic && "text-right")}>{ind.label}</p>
+                        <div className={cn("flex items-center justify-between", isArabic && "flex-row-reverse")}>
+                          <p className="text-sm font-black text-slate-900 tracking-tight">
+                            {ind.value} <span className="text-[10px] font-bold text-slate-400 ml-0.5">{ind.unit}</span>
+                          </p>
+                          <div className={cn("h-1.5 w-1.5 rounded-full ring-4 ring-opacity-10", `bg-${ind.color}-500 ring-${ind.color}-500`)} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <Badge className="bg-white text-blue-600 border-blue-100 px-2 py-0 h-4 text-[7px] font-black uppercase rounded-md shadow-sm">Confirmed</Badge>
+
+                {/* 3. Recent Prediction History */}
+                <div className={cn("space-y-5", isArabic && "text-right")}>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">
+                    {t('doctorDashboard.sidebar.messages.recentAssessments')}
+                  </p>
+                  <div className="space-y-3">
+                    {patientProfile.predictions.slice(0, 3).map((pred) => (
+                      <div key={pred.id} className={cn("p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-blue-200 transition-all cursor-pointer", isArabic && "flex-row-reverse")}>
+                        <div className={cn("flex items-center gap-4", isArabic && "flex-row-reverse")}>
+                          <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center transition-colors", pred.risk_level?.toLowerCase() === 'high' ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600")}>
+                            <Activity className="h-4.5 w-4.5" />
+                          </div>
+                          <div className={isArabic ? "text-right" : "text-left"}>
+                            <p className="text-[11px] font-black text-slate-900 leading-tight">{new Date(pred.created_at).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}</p>
+                            <p className={cn("text-[9px] font-black uppercase tracking-tighter mt-0.5", pred.risk_level?.toLowerCase() === 'high' ? "text-red-500" : "text-green-500")}>
+                              {isArabic ? (pred.risk_level === 'High' ? 'خطورة عالية' : 'خطورة منخفضة') : `${pred.risk_level} Risk`} • {Math.round(pred.probability)}%
+                            </p>
+                          </div>
+                        </div>
+                        <ArrowUpRight className={cn("h-4 w-4 text-slate-300 group-hover:text-blue-600 transition-colors", isArabic && "rotate-[-90deg]")} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Action Button */}
+                <div className="pt-4">
+                  <Button className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.75rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/20 group">
+                    <FileText className={cn("h-4 w-4 group-hover:scale-110 transition-transform", isArabic ? "ml-2" : "mr-2")} />
+                    {t('doctorDashboard.sidebar.messages.openRecord')}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-slate-200">
+                <UserIcon className="h-12 w-12 opacity-10 mb-4" />
+                <p className="text-[10px] font-black uppercase tracking-widest">
+                  {t('doctorDashboard.sidebar.messages.loadingContext')}
+                </p>
               </div>
-            </div>
+            )}
           </div>
         </ScrollArea>
       </Card>

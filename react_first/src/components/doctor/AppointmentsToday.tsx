@@ -1,24 +1,12 @@
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Clock, Video } from 'lucide-react';
+import { Calendar, Clock, Video, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface Patient {
-  id: number;
-  name: string;
-  profile_picture?: string | null;
-}
-
-interface Appointment {
-  id: number;
-  patient: Patient;
-  time: string; // "HH:MM" format
-  status: string;
-  type: string;
-}
+import { Appointment } from '@/types/api';
 
 interface AppointmentsTodayProps {
   appointments: Appointment[];
@@ -27,44 +15,39 @@ interface AppointmentsTodayProps {
 
 export default function AppointmentsToday({ appointments, isLoading }: AppointmentsTodayProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled': return 'bg-blue-500';
       case 'completed': return 'bg-green-500';
       case 'cancelled': return 'bg-red-500';
-      case 'no_show': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+      case 'no_show': return 'bg-slate-400';
+      default: return 'bg-slate-400';
     }
   };
 
   const getTypeIcon = (type: string) => {
-    if (type === 'online' || type === 'video') return <Video className="h-3 w-3 text-blue-500" />;
-    return <Clock className="h-3 w-3 text-muted-foreground" />;
+    if (type === 'video') return <Video className="h-3 w-3 text-blue-500" />;
+    return <Clock className="h-3 w-3 text-slate-400" />;
   };
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="rounded-2xl border-slate-100 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            {t('doctorDashboard.appointments.title')}
-          </CardTitle>
+          <Skeleton className="h-6 w-[150px]" />
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex gap-4 items-center">
-                <div className="flex flex-col items-center min-w-[50px]">
-                  <Skeleton className="h-4 w-10 mb-1" />
-                  <Skeleton className="h-3 w-8" />
-                </div>
-                <div className="flex-1 flex items-center gap-3 bg-muted/30 p-3 rounded-lg border">
-                  <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-4 w-12" />
+                <div className="flex-1 flex items-center gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                  <Skeleton className="h-9 w-9 rounded-full" />
                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-[120px]" />
-                    <Skeleton className="h-3 w-[80px]" />
+                    <Skeleton className="h-4 w-[100px]" />
+                    <Skeleton className="h-3 w-[60px]" />
                   </div>
                 </div>
               </div>
@@ -76,52 +59,65 @@ export default function AppointmentsToday({ appointments, isLoading }: Appointme
   }
 
   return (
-    <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          {t('doctorDashboard.appointments.title')}
-        </CardTitle>
-        <Button variant="ghost" size="sm" className="text-xs">
+    <Card className="rounded-2xl border-slate-100 shadow-sm overflow-hidden h-full flex flex-col">
+      <CardHeader className="flex flex-row items-center justify-between pb-4 bg-slate-50/30">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-green-600 rounded-lg text-white">
+            <Calendar className="h-4 w-4" />
+          </div>
+          <CardTitle className="text-lg font-black text-slate-900 tracking-tight">
+            {t('doctorDashboard.appointments.title')}
+          </CardTitle>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/doctor-dashboard/appointments')}
+          className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600"
+        >
           {t('doctorDashboard.appointments.viewAll')}
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 p-6">
         {appointments.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
-            <Calendar className="h-8 w-8 mb-2 opacity-20" />
-            <p>{t('doctorDashboard.appointments.empty')}</p>
+          <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+              <Calendar className="h-8 w-8 opacity-20" />
+            </div>
+            <p className="text-xs font-bold uppercase tracking-widest">{t('doctorDashboard.appointments.empty')}</p>
           </div>
         ) : (
-          <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent">
+          <div className="space-y-6 relative before:absolute before:inset-0 before:left-2 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
             {appointments.map((appt) => (
-              <div key={appt.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+              <div key={appt.id} className="relative flex items-center gap-4 group">
                 {/* Timeline dot */}
                 <div className={cn(
-                  "flex items-center justify-center w-3 h-3 rounded-full border-2 border-background z-10",
+                  "flex items-center justify-center w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 shrink-0",
                   getStatusColor(appt.status)
                 )} />
                 
                 {/* Time */}
-                <div className="w-[60px] text-sm font-medium ml-4 shrink-0">
-                  {appt.time}
+                <div className="text-[10px] font-black text-slate-900 w-10 shrink-0">
+                  {appt.appointment_time?.substring(0, 5) || '--:--'}
                 </div>
 
                 {/* Card */}
-                <div className="flex-1 bg-card border shadow-sm rounded-lg p-3 flex items-center gap-3 transition-colors hover:bg-muted/50">
-                  <Avatar className="h-9 w-9 border border-border">
-                    <AvatarImage src={appt.patient.profile_picture || undefined} />
-                    <AvatarFallback>{appt.patient.name.charAt(0)}</AvatarFallback>
+                <div className="flex-1 bg-white border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-2xl p-3 flex items-center gap-3 transition-all hover:shadow-md hover:border-blue-100 cursor-pointer">
+                  <Avatar className="h-9 w-9 border-2 border-slate-50 shadow-sm">
+                    <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs">
+                      {appt.patient_name?.charAt(0) || 'P'}
+                    </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium truncate">{appt.patient.name}</p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      {getTypeIcon(appt.type)}
-                      <p className="text-xs text-muted-foreground truncate capitalize">
-                        {appt.type.replace('_', ' ')}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">{appt.patient_name || 'Anonymous'}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {getTypeIcon(appt.appointment_type)}
+                      <p className="text-[10px] font-medium text-slate-500 uppercase tracking-tight truncate">
+                        {appt.appointment_type?.replace('_', ' ') || 'Consultation'}
                       </p>
                     </div>
                   </div>
+                  <ArrowRight className="h-3 w-3 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
                 </div>
               </div>
             ))}

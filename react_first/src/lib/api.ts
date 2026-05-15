@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
   DOCTOR_PATIENTS: `${API_BASE_URL}/api/doctor/patients/`,
   DOCTOR_APPOINTMENTS_TODAY: `${API_BASE_URL}/api/doctor/appointments/today/`,
   DOCTOR_MESSAGES: `${API_BASE_URL}/api/doctor/messages/recent/`,
+  DOCTOR_REPORTS: `${API_BASE_URL}/api/doctor/predictions/`,
   DOCTOR_ACTIVITY: `${API_BASE_URL}/api/doctor/activity/`,
   DOCTOR_PROFILE: `${API_BASE_URL}/api/doctor/profile/`,
   DOCTOR_NOTIFICATIONS: `${API_BASE_URL}/api/doctor/notifications/`,

@@ -89,7 +89,7 @@ export default function DoctorSidebar({ className }: DoctorSidebarProps) {
               end={item.path === '/doctor-dashboard'}
             >
               <item.icon className={cn("h-5 w-5 shrink-0", collapsed && "mx-auto")} />
-              
+
               {!collapsed && (
                 <span className="flex-1 truncate">{item.label}</span>
               )}
@@ -100,7 +100,7 @@ export default function DoctorSidebar({ className }: DoctorSidebarProps) {
                   {item.badge}
                 </span>
               )}
-              
+
               {/* Dot badge when collapsed */}
               {item.badge && collapsed && (
                 <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-destructive" />
@@ -118,7 +118,7 @@ export default function DoctorSidebar({ className }: DoctorSidebarProps) {
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <p className="text-sm font-medium leading-none truncate">Health-AI</p>
+              <p className="text-sm font-medium leading-none truncate">Health-Care</p>
               <p className="text-xs text-muted-foreground mt-1 truncate">
                 {t('doctorDashboard.sidebar.doctorPortal')}
               </p>

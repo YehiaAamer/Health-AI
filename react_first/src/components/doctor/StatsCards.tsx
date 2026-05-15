@@ -3,14 +3,10 @@ import { Users, FileText, CheckCircle, Activity } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { DashboardStats } from '@/types/api';
 
 interface StatsCardsProps {
-  stats: {
-    patient_count: number;
-    total_predictions: number;
-    pending_reviews: number;
-    today_appointments: number;
-  } | null;
+  stats: DashboardStats | null;
   isLoading: boolean;
 }
 
@@ -20,7 +16,7 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
   const cards = [
     {
       title: t('doctorDashboard.stats.totalPatients'),
-      value: stats?.patient_count ?? 0,
+      value: stats?.total_patients ?? 0,
       icon: Users,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
@@ -56,7 +52,7 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
+          <Card key={i} className="rounded-2xl border-slate-100 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between space-y-0 pb-2">
                 <Skeleton className="h-4 w-[100px]" />
@@ -74,29 +70,29 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, index) => (
-        <Card key={index} className="overflow-hidden group hover:shadow-md transition-shadow">
+        <Card key={index} className="overflow-hidden group hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300 border-slate-100 rounded-2xl shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between space-y-0">
-              <h3 className="text-sm font-medium text-muted-foreground">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 {card.title}
               </h3>
-              <div className={cn("p-2 rounded-full", card.bgColor, card.color)}>
+              <div className={cn("p-2.5 rounded-xl transition-colors duration-300", card.bgColor, card.color)}>
                 <card.icon className="h-4 w-4" />
               </div>
             </div>
             
             <div className="mt-4">
-              <div className="text-2xl font-bold">{card.value}</div>
+              <div className="text-3xl font-black text-slate-900 tracking-tight">{card.value}</div>
               
               {card.trend && (
-                <div className="flex items-center mt-1 text-xs">
+                <div className="flex items-center mt-2 text-[10px] uppercase font-black tracking-widest">
                   <span className={cn(
-                    "font-medium",
-                    card.trend.startsWith('+') ? "text-green-600" : "text-amber-600"
+                    "px-1.5 py-0.5 rounded-md",
+                    card.trend.startsWith('+') ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"
                   )}>
                     {card.trend}
                   </span>
-                  <span className="text-muted-foreground mx-1">
+                  <span className="text-slate-400 ml-2">
                     {card.trendLabel}
                   </span>
                 </div>

@@ -17,6 +17,7 @@ import ReportsPage from "./pages/doctor/ReportsPage";
 import MessagesPage from "./pages/doctor/MessagesPage";
 import SettingsPage from "./pages/doctor/SettingsPage";
 import HelpPage from "./pages/doctor/HelpPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 import DiagnosisWizard from "./pages/patient/DiagnosisWizard";
 import Report from "./pages/patient/Report";
 import PastReports from "./pages/patient/PastReports";
@@ -100,12 +101,12 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<DoctorDashboard />} />
-            <Route path="patients" element={<PatientsPage />} />
-            <Route path="appointments" element={<AppointmentsPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="messages" element={<MessagesPage />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route index element={<ErrorBoundary><DoctorDashboard /></ErrorBoundary>} />
+            <Route path="patients" element={<ErrorBoundary><PatientsPage /></ErrorBoundary>} />
+            <Route path="appointments" element={<ErrorBoundary><AppointmentsPage /></ErrorBoundary>} />
+            <Route path="reports" element={<ErrorBoundary><ReportsPage /></ErrorBoundary>} />
+            <Route path="messages" element={<ErrorBoundary><MessagesPage /></ErrorBoundary>} />
+            <Route path="settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
             <Route path="help" element={<HelpPage />} />
           </Route>
           <Route
